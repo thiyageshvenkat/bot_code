@@ -60,6 +60,7 @@ public final class Intake extends SubsystemBase {
     public State getState() { return state; }
     public boolean hasBeamSensor() { return beam != null; }
     public boolean isBeamBlocked() { return beamBlocked(); }
+    public double getCurrentAmps() { return motor.getCurrent(CurrentUnit.AMPS); }
 
     @Override
     public void periodic() {

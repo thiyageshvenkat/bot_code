@@ -46,6 +46,8 @@ public final class Magazine extends SubsystemBase {
     public State getState() { return state; }
     public boolean isFeeding() { return state == State.FEEDING; }
     public ScoringElement nextElement() { return inventory.peekNext(); }
+    public boolean hasExitBeam() { return exitBeam != null; }
+    public boolean isExitBlocked() { return exitBlocked(); }
 
     public boolean consumeFeedCompleted() {
         boolean completed = feedCompleted;

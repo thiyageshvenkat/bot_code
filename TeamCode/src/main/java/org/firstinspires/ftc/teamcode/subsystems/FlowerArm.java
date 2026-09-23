@@ -79,6 +79,10 @@ public final class FlowerArm extends SubsystemBase {
     public State getState() { return state; }
     public boolean atScoreHeight() { return state == State.READY; }
     public int getPositionTicks() { return lift.getCurrentPosition(); }
+    public boolean hasBottomLimit() { return bottomLimit != null; }
+    public boolean hasTopLimit() { return topLimit != null; }
+    public boolean isBottomPressed() { return bottomPressed(); }
+    public boolean isTopPressed() { return topPressed(); }
 
     @Override
     public void periodic() {
