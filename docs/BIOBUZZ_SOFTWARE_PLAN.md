@@ -34,10 +34,10 @@ every event.
 ## Hardware assumptions
 
 Hardware names and preliminary calibration values live in `RobotConfig`.
-Mechanism devices are mapped defensively and report a fault when missing. The
-drivetrain and Pinpoint are required. Directions, odometry offsets, PID values,
-servo endpoints, shot tables, and autonomous poses must be measured on the
-physical robot before competition.
+Core mechanism devices, drivetrain, Pinpoint, and webcam are required; the three
+beam/limit sensors are optional. Directions, odometry offsets, PID values, servo
+endpoints, shot tables, and autonomous poses must be measured on the physical
+robot before competition.
 
 ## Primary sources
 
