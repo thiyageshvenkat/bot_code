@@ -37,7 +37,7 @@ public class Drivetrain extends SubsystemBase {
         if (Bot.follower != null) {
             follower = Bot.follower;
         } else {
-            follower = Constants.createFollower(hardwareMap);
+            follower = Constants.create(hardwareMap);
         }
     }
 
