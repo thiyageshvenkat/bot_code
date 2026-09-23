@@ -45,7 +45,7 @@ public class Drivetrain extends SubsystemBase {
         follower.manual(0, 0, 0);
     }
     public void startAuto() {
-        follower.activateAllPIDFs();
+        follower.stop();
     }
 
     public void driveRobotCentric() { isRobotCentric = true; }
