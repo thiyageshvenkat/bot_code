@@ -65,8 +65,12 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         double turn = gamepad1.right_stick_x;
         drivetrain.setPrecisionMode(gamepad1.right_trigger > 0.4
                 || superstructure.flower.getState() != org.firstinspires.ftc.teamcode.subsystems.FlowerArm.State.STOWED);
-        if (gamepad1.left_bumper) turn = superstructure.vision.aimTurnPower();
-        drivetrain.setMovement(forward, strafe, turn);
+        if (gamepad1.left_bumper) {
+            drivetrain.setMovementWithRawTurn(forward, strafe,
+                    superstructure.vision.aimTurnPower());
+        } else {
+            drivetrain.setMovement(forward, strafe, turn);
+        }
 
         if (gamepad2.a) {
             superstructure.intake.expect(ScoringElement.POLLEN);

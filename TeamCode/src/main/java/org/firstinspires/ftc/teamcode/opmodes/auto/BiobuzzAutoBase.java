@@ -41,13 +41,11 @@ abstract class BiobuzzAutoBase extends OpMode {
 
     @Override
     public void init_loop() {
-        superstructure.prepareHiveShot();
         HiveObservation target = superstructure.vision.closestCell();
         telemetry.addData("Start pose", plan.start);
         telemetry.addData("Hive target", target == null ? "not visible"
                 : String.format("%.1f in, %.1f deg", target.rangeInches, target.bearingDegrees));
-        telemetry.addData("Flywheels", "%.0f / %.0f",
-                superstructure.shooter.getLeftVelocity(), superstructure.shooter.getRightVelocity());
+        telemetry.addLine("Launcher remains stopped until PLAY");
         telemetry.update();
     }
 
@@ -85,7 +83,7 @@ abstract class BiobuzzAutoBase extends OpMode {
 
             case ALIGN_AND_SHOOT:
                 superstructure.prepareHiveShot();
-                drivetrain.setMovement(0, 0, superstructure.vision.aimTurnPower());
+                drivetrain.setRawMovement(0, 0, superstructure.vision.aimTurnPower());
                 if (superstructure.inventory.peekNext() == null
                         || matchTimer.seconds() >= RobotConfig.Auto.SHOOT_CUTOFF_SECONDS) {
                     beginPark();

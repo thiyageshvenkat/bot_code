@@ -63,9 +63,23 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public void setMovement(double forward, double strafe, double turn) {
-        forward = shape(forward) * speedScale;
-        strafe = shape(strafe) * speedScale;
-        turn = shape(turn) * speedScale;
+        applyMovement(shape(forward) * speedScale, shape(strafe) * speedScale,
+                shape(turn) * speedScale);
+    }
+
+    /** Driver translation with an already-shaped closed-loop turn command. */
+    public void setMovementWithRawTurn(double forward, double strafe, double turn) {
+        applyMovement(shape(forward) * speedScale, shape(strafe) * speedScale,
+                Range.clip(turn, -1.0, 1.0));
+    }
+
+    /** Direct normalized controller output for autonomous alignment. */
+    public void setRawMovement(double forward, double strafe, double turn) {
+        applyMovement(Range.clip(forward, -1.0, 1.0), Range.clip(strafe, -1.0, 1.0),
+                Range.clip(turn, -1.0, 1.0));
+    }
+
+    private void applyMovement(double forward, double strafe, double turn) {
         if (isRobotCentric) {
             follower.manual(forward, strafe, turn);
         } else {
