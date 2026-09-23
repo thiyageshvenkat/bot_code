@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.pedropathing.follower.Follower;
+import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
@@ -52,7 +53,12 @@ public class Drivetrain extends SubsystemBase {
     public void driveFieldCentric() { isRobotCentric = false; }
 
     public void setMovement(double forward, double strafe, double turn) {
-        follower.manual(forward, strafe, turn);
+        if (isRobotCentric) {
+            follower.manual(forward, strafe, turn);
+        } else {
+            follower.manual(ManualDrive.fieldCentric(
+                    forward, strafe, turn, follower.pose().heading()));
+        }
     }
 
     public void followPath(Path path) {
