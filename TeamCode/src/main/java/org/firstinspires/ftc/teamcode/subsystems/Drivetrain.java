@@ -52,7 +52,7 @@ public class Drivetrain extends SubsystemBase {
     public void driveFieldCentric() { isRobotCentric = false; }
 
     public void setMovement(double forward, double strafe, double turn) {
-        follower.setTeleOpDrive(forward, strafe, turn, isRobotCentric);
+        follower.manual(forward, strafe, turn);
     }
 
     public void followPath(Path path) {
