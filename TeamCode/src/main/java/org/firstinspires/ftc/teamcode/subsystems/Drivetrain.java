@@ -5,8 +5,10 @@ import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
+import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.util.opMode.Bot;
 
@@ -18,6 +20,7 @@ public class Drivetrain extends SubsystemBase {
     private final Follower follower;
 
     private boolean isRobotCentric = false;
+    private double speedScale = RobotConfig.Drive.NORMAL_SCALE;
 
     /**
      * Every {@code Subsystem} should take only the {@code HardwareMap} into its constructor.
@@ -51,7 +54,18 @@ public class Drivetrain extends SubsystemBase {
     public void driveRobotCentric() { isRobotCentric = true; }
     public void driveFieldCentric() { isRobotCentric = false; }
 
+    public boolean isRobotCentric() { return isRobotCentric; }
+
+    public void setPrecisionMode(boolean enabled) {
+        speedScale = enabled
+                ? RobotConfig.Drive.PRECISION_SCALE
+                : RobotConfig.Drive.NORMAL_SCALE;
+    }
+
     public void setMovement(double forward, double strafe, double turn) {
+        forward = shape(forward) * speedScale;
+        strafe = shape(strafe) * speedScale;
+        turn = shape(turn) * speedScale;
         if (isRobotCentric) {
             follower.manual(forward, strafe, turn);
         } else {
@@ -64,6 +78,18 @@ public class Drivetrain extends SubsystemBase {
         follower.follow(path);
     }
 
+    public void holdCurrentPose() {
+        follower.hold(follower.pose());
+    }
+
+    public void stop() {
+        follower.stop();
+    }
+
+    public boolean isBusy() {
+        return follower.isBusy();
+    }
+
     public void setPose(Pose pose) {
         follower.setPose(pose);
     }
@@ -72,5 +98,22 @@ public class Drivetrain extends SubsystemBase {
 
     public Pose getPose() {
         return follower.pose();
+    }
+
+    public Follower getFollower() {
+        return follower;
+    }
+
+    @Override
+    public void periodic() {
+        follower.update();
+    }
+
+    private static double shape(double input) {
+        double clipped = Range.clip(input, -1.0, 1.0);
+        if (Math.abs(clipped) <= RobotConfig.Drive.STICK_DEADBAND) return 0.0;
+        double normalized = (Math.abs(clipped) - RobotConfig.Drive.STICK_DEADBAND)
+                / (1.0 - RobotConfig.Drive.STICK_DEADBAND);
+        return Math.copySign(normalized * normalized * normalized, clipped);
     }
 }
