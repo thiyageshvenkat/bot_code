@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.teamcode.constants.RobotConfig;
+import org.firstinspires.ftc.teamcode.constants.IntakeConfig;
 import org.firstinspires.ftc.teamcode.game.ElementInventory;
 import org.firstinspires.ftc.teamcode.game.ScoringElement;
 
@@ -27,12 +27,12 @@ public final class Intake extends SubsystemBase {
 
     public Intake(HardwareMap hardwareMap, ElementInventory inventory) {
         this.inventory = inventory;
-        motor = hardwareMap.get(DcMotorEx.class, RobotConfig.Hardware.INTAKE);
+        motor = hardwareMap.get(DcMotorEx.class, IntakeConfig.MOTOR);
         motor.setPower(0);
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        beam = hardwareMap.tryGet(DigitalChannel.class, RobotConfig.Hardware.INTAKE_BEAM);
+        beam = hardwareMap.tryGet(DigitalChannel.class, IntakeConfig.BEAM);
         if (beam != null) beam.setMode(DigitalChannel.Mode.INPUT);
         previousBeamBlocked = beamBlocked();
     }
@@ -71,11 +71,11 @@ public final class Intake extends SubsystemBase {
         previousBeamBlocked = blocked;
 
         if (state == State.COLLECTING
-                && motor.getCurrent(CurrentUnit.AMPS) >= RobotConfig.Intake.JAM_CURRENT_AMPS
-                && stateTimer.seconds() >= RobotConfig.Intake.JAM_TIME_SECONDS) {
+                && motor.getCurrent(CurrentUnit.AMPS) >= IntakeConfig.JAM_CURRENT_AMPS
+                && stateTimer.seconds() >= IntakeConfig.JAM_TIME_SECONDS) {
             transition(State.CLEARING_JAM);
         } else if (state == State.CLEARING_JAM
-                && stateTimer.seconds() >= RobotConfig.Intake.CLEAR_TIME_SECONDS) {
+                && stateTimer.seconds() >= IntakeConfig.CLEAR_TIME_SECONDS) {
             transition(inventory.isFull() ? State.FULL : State.COLLECTING);
         } else if (state == State.FULL && !inventory.isFull()) {
             transition(State.STOPPED);
@@ -83,11 +83,11 @@ public final class Intake extends SubsystemBase {
 
         switch (state) {
             case COLLECTING:
-                motor.setPower(RobotConfig.Intake.COLLECT_POWER);
+                motor.setPower(IntakeConfig.COLLECT_POWER);
                 break;
             case REVERSING:
             case CLEARING_JAM:
-                motor.setPower(RobotConfig.Intake.REVERSE_POWER);
+                motor.setPower(IntakeConfig.REVERSE_POWER);
                 break;
             default:
                 motor.setPower(0);
@@ -103,6 +103,6 @@ public final class Intake extends SubsystemBase {
 
     private boolean beamBlocked() {
         if (beam == null) return false;
-        return RobotConfig.Intake.BEAM_ACTIVE_LOW ? !beam.getState() : beam.getState();
+        return IntakeConfig.BEAM_ACTIVE_LOW ? !beam.getState() : beam.getState();
     }
 }

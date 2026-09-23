@@ -15,17 +15,17 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.constants.RobotConfig;
+import org.firstinspires.ftc.teamcode.constants.DriveConfig;
 
 /** Pedro Pathing 3 assembly for the BIOBUZZ mecanum chassis and Pinpoint. */
 public final class Constants {
     private Constants() {}
 
     public static final MecanumConfig drivetrainConfig = new MecanumConfig(c -> {
-        c.frontLeftName.set(RobotConfig.Hardware.FRONT_LEFT);
-        c.frontRightName.set(RobotConfig.Hardware.FRONT_RIGHT);
-        c.backLeftName.set(RobotConfig.Hardware.BACK_LEFT);
-        c.backRightName.set(RobotConfig.Hardware.BACK_RIGHT);
+        c.frontLeftName.set(DriveConfig.FRONT_LEFT);
+        c.frontRightName.set(DriveConfig.FRONT_RIGHT);
+        c.backLeftName.set(DriveConfig.BACK_LEFT);
+        c.backRightName.set(DriveConfig.BACK_RIGHT);
         c.frontLeftDirection.set(DcMotorSimple.Direction.REVERSE);
         c.backLeftDirection.set(DcMotorSimple.Direction.REVERSE);
         c.frontRightDirection.set(DcMotorSimple.Direction.FORWARD);
@@ -34,9 +34,9 @@ public final class Constants {
     });
 
     public static final PinpointConfig localizerConfig = new PinpointConfig(c -> {
-        c.name.set(RobotConfig.Hardware.PINPOINT);
-        c.xPodOffset.set(RobotConfig.Drive.PINPOINT_X_OFFSET_IN);
-        c.yPodOffset.set(RobotConfig.Drive.PINPOINT_Y_OFFSET_IN);
+        c.name.set(DriveConfig.PINPOINT);
+        c.xPodOffset.set(DriveConfig.PINPOINT_X_OFFSET_IN);
+        c.yPodOffset.set(DriveConfig.PINPOINT_Y_OFFSET_IN);
         c.offsetUnits.set(DistanceUnit.INCH);
         c.globalDistanceUnit.set(DistanceUnit.INCH);
         c.xPodDirection.set(GoBildaPinpointDriver.EncoderDirection.FORWARD);
@@ -59,7 +59,7 @@ public final class Constants {
         c.maxAchievableStrafeVelocity.set(40.0);
         c.naturalForwardDeceleration.set(80.0);
         c.naturalStrafeDeceleration.set(80.0);
-        c.maxPathSpeed.set(RobotConfig.Drive.FORESIGHT_TUNED ? 1.0 : 0.35);
+        c.maxPathSpeed.set(DriveConfig.FORESIGHT_TUNED ? 1.0 : 0.35);
     });
 
     public static Follower create(HardwareMap hardwareMap) {

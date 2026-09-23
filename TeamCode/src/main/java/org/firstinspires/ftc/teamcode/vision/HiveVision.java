@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.constants.RobotConfig;
+import org.firstinspires.ftc.teamcode.constants.VisionConfig;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
@@ -23,7 +23,7 @@ public final class HiveVision implements AutoCloseable {
                 .build();
         aprilTags.setDecimation(2);
         portal = new VisionPortal.Builder()
-                .setCamera(hardwareMap.get(WebcamName.class, RobotConfig.Hardware.WEBCAM))
+                .setCamera(hardwareMap.get(WebcamName.class, VisionConfig.WEBCAM))
                 .addProcessor(aprilTags)
                 .build();
     }
@@ -45,16 +45,16 @@ public final class HiveVision implements AutoCloseable {
         HiveObservation observation = closestCell();
         if (observation == null
                 || Math.abs(observation.bearingDegrees)
-                <= RobotConfig.Vision.AIM_BEARING_TOLERANCE_DEG) return 0.0;
-        return Range.clip(observation.bearingDegrees * RobotConfig.Vision.AIM_TURN_KP,
-                -RobotConfig.Vision.MAX_AIM_TURN, RobotConfig.Vision.MAX_AIM_TURN);
+                <= VisionConfig.AIM_BEARING_TOLERANCE_DEG) return 0.0;
+        return Range.clip(observation.bearingDegrees * VisionConfig.AIM_TURN_KP,
+                -VisionConfig.MAX_AIM_TURN, VisionConfig.MAX_AIM_TURN);
     }
 
     public boolean isAligned() {
         HiveObservation observation = closestCell();
         return observation != null
                 && Math.abs(observation.bearingDegrees)
-                <= RobotConfig.Vision.AIM_BEARING_TOLERANCE_DEG;
+                <= VisionConfig.AIM_BEARING_TOLERANCE_DEG;
     }
 
     @Override

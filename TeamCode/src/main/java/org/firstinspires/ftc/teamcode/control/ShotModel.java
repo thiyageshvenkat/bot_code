@@ -1,22 +1,22 @@
 package org.firstinspires.ftc.teamcode.control;
 
-import org.firstinspires.ftc.teamcode.constants.RobotConfig;
+import org.firstinspires.ftc.teamcode.constants.ShooterConfig;
 
 /** Preliminary two-point shot table. Replace points with measured cell-hit data. */
 public final class ShotModel {
     private ShotModel() {}
 
     public static ShotSolution forDistance(double distanceInches) {
-        double distance = finiteOr(distanceInches, RobotConfig.Shooter.NEAR_DISTANCE_IN);
-        double denominator = RobotConfig.Shooter.FAR_DISTANCE_IN
-                - RobotConfig.Shooter.NEAR_DISTANCE_IN;
+        double distance = finiteOr(distanceInches, ShooterConfig.NEAR_DISTANCE_IN);
+        double denominator = ShooterConfig.FAR_DISTANCE_IN
+                - ShooterConfig.NEAR_DISTANCE_IN;
         double t = denominator == 0.0 ? 0.0
-                : (distance - RobotConfig.Shooter.NEAR_DISTANCE_IN) / denominator;
+                : (distance - ShooterConfig.NEAR_DISTANCE_IN) / denominator;
         t = clamp(t, 0.0, 1.0);
 
-        double hood = lerp(RobotConfig.Shooter.HOOD_NEAR,
-                RobotConfig.Shooter.HOOD_FAR, t);
-        double velocity = RobotConfig.Shooter.DEFAULT_VELOCITY_TPS
+        double hood = lerp(ShooterConfig.HOOD_NEAR,
+                ShooterConfig.HOOD_FAR, t);
+        double velocity = ShooterConfig.DEFAULT_VELOCITY_TPS
                 * lerp(0.88, 1.12, t);
         return new ShotSolution(distance, velocity, hood);
     }

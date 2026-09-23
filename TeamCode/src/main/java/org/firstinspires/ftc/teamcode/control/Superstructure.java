@@ -6,6 +6,7 @@ import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.firstinspires.ftc.teamcode.game.BiobuzzRules;
 import org.firstinspires.ftc.teamcode.game.ElementInventory;
 import org.firstinspires.ftc.teamcode.game.ScoringElement;
+import org.firstinspires.ftc.teamcode.constants.ShooterConfig;
 import org.firstinspires.ftc.teamcode.subsystems.FlowerArm;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Magazine;
@@ -46,7 +47,7 @@ public final class Superstructure implements AutoCloseable {
     public void prepareHiveShot() {
         HiveObservation target = vision.closestCell();
         double distance = target == null
-                ? org.firstinspires.ftc.teamcode.constants.RobotConfig.Shooter.NEAR_DISTANCE_IN
+                ? ShooterConfig.NEAR_DISTANCE_IN
                 : target.rangeInches;
         shooter.prepare(ShotModel.forDistance(distance));
     }

@@ -33,7 +33,8 @@ every event.
 
 ## Hardware assumptions
 
-Hardware names and preliminary calibration values live in `RobotConfig`.
+Hardware names and preliminary calibration values live in focused files in the
+`constants` package (`DriveConfig`, `ShooterConfig`, and so on).
 Core mechanism devices, drivetrain, Pinpoint, and webcam are required; the three
 beam/limit sensors are optional. Directions, odometry offsets, PID values, servo
 endpoints, shot tables, and autonomous poses must be measured on the physical

@@ -8,7 +8,8 @@ Competition code is under `TeamCode/src/main/java/org/firstinspires/ftc/teamcode
 Before running it on a robot, follow the hardware map, control, calibration, and
 safety checklist in [`docs/ROBOT_SETUP.md`](docs/ROBOT_SETUP.md). The current
 motor directions, servo endpoints, shot model, odometry offsets, and field poses
-are preliminary and must be validated on the physical robot.
+in the mechanism-specific `constants` files are preliminary and must be
+validated on the physical robot.
 
 ## Welcome!
 This GitHub repository contains the source code that is used to build an Android app to control a *FIRST* Tech Challenge competition robot.  To use this SDK, download/clone the entire project to your local computer.

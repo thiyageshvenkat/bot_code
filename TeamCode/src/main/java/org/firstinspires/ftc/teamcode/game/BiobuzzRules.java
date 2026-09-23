@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.game;
 
-import org.firstinspires.ftc.teamcode.constants.RobotConfig;
+import org.firstinspires.ftc.teamcode.constants.MagazineConfig;
 
 /** Pure rule gates used by both TeleOp and autonomous coordination. */
 public final class BiobuzzRules {
@@ -11,7 +11,7 @@ public final class BiobuzzRules {
     private BiobuzzRules() {}
 
     public static boolean canControlAnother(int controlledCount) {
-        return controlledCount >= 0 && controlledCount < RobotConfig.Magazine.CAPACITY;
+        return controlledCount >= 0 && controlledCount < MagazineConfig.CAPACITY;
     }
 
     public static boolean canCollect(AllianceColor alliance, ScoringElement element,

@@ -2,7 +2,8 @@
 
 This code compiles and its rule/model tests run on a computer. It has not been
 calibrated or field-tested on the physical robot. Treat every value marked
-`TUNE` in `RobotConfig.java` as a starting placeholder.
+`TUNE` in the mechanism-specific files under the `constants` package as a
+starting placeholder.
 
 ## Required Robot Configuration names
 
@@ -43,7 +44,7 @@ and the lift relies only on encoder limits.
 6. Measure Pinpoint X/Y offsets, encoder directions, track width, wheel radius,
    and motion constraints using the Pedro tuning OpModes.
 7. Determine safe closed/open endpoints for every servo without driving into a
-   hard stop. Update `RobotConfig` one mechanism at a time.
+   hard stop. Update the relevant mechanism config one mechanism at a time.
 8. Tune the intake jam-current threshold using logged free-running and stalled
    current. Leave margin for battery voltage and mechanism wear.
 9. Characterize launcher speed and hood angle from multiple measured distances.

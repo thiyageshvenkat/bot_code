@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
-import org.firstinspires.ftc.teamcode.constants.RobotConfig;
+import org.firstinspires.ftc.teamcode.constants.FlowerConfig;
 
 /** Lift and gate used to enter scoring elements through the top of a flower. */
 public final class FlowerArm extends SubsystemBase {
@@ -20,12 +20,12 @@ public final class FlowerArm extends SubsystemBase {
     private State state = State.STOWED;
 
     public FlowerArm(HardwareMap hardwareMap) {
-        lift = hardwareMap.get(DcMotorEx.class, RobotConfig.Hardware.FLOWER_LIFT);
-        gate = hardwareMap.get(Servo.class, RobotConfig.Hardware.FLOWER_GATE);
+        lift = hardwareMap.get(DcMotorEx.class, FlowerConfig.LIFT);
+        gate = hardwareMap.get(Servo.class, FlowerConfig.GATE);
         bottomLimit = hardwareMap.tryGet(DigitalChannel.class,
-                RobotConfig.Hardware.FLOWER_BOTTOM_LIMIT);
+                FlowerConfig.BOTTOM_LIMIT);
         topLimit = hardwareMap.tryGet(DigitalChannel.class,
-                RobotConfig.Hardware.FLOWER_TOP_LIMIT);
+                FlowerConfig.TOP_LIMIT);
         if (bottomLimit != null) bottomLimit.setMode(DigitalChannel.Mode.INPUT);
         if (topLimit != null) topLimit.setMode(DigitalChannel.Mode.INPUT);
 
@@ -39,15 +39,15 @@ public final class FlowerArm extends SubsystemBase {
     public void raiseToFlower() {
         if (state == State.FAULT) return;
         closeGate();
-        lift.setTargetPosition(RobotConfig.Flower.SCORE_TICKS);
+        lift.setTargetPosition(FlowerConfig.SCORE_TICKS);
         lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        lift.setPower(Math.abs(RobotConfig.Flower.LIFT_UP_POWER));
+        lift.setPower(Math.abs(FlowerConfig.LIFT_UP_POWER));
         state = State.RAISING;
     }
 
     public boolean deposit() {
         if (state != State.READY) return false;
-        gate.setPosition(RobotConfig.Flower.GATE_OPEN);
+        gate.setPosition(FlowerConfig.GATE_OPEN);
         state = State.DEPOSITING;
         return true;
     }
@@ -61,12 +61,12 @@ public final class FlowerArm extends SubsystemBase {
             return;
         }
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        lift.setPower(RobotConfig.Flower.LIFT_DOWN_POWER);
+        lift.setPower(FlowerConfig.LIFT_DOWN_POWER);
         state = State.LOWERING;
     }
 
     public void closeGate() {
-        gate.setPosition(RobotConfig.Flower.GATE_CLOSED);
+        gate.setPosition(FlowerConfig.GATE_CLOSED);
         if (state == State.DEPOSITING) state = State.READY;
     }
 
@@ -87,8 +87,8 @@ public final class FlowerArm extends SubsystemBase {
     @Override
     public void periodic() {
         if (state == State.RAISING) {
-            boolean atTarget = Math.abs(lift.getCurrentPosition() - RobotConfig.Flower.SCORE_TICKS)
-                    <= RobotConfig.Flower.POSITION_TOLERANCE_TICKS;
+            boolean atTarget = Math.abs(lift.getCurrentPosition() - FlowerConfig.SCORE_TICKS)
+                    <= FlowerConfig.POSITION_TOLERANCE_TICKS;
             if (topPressed() || atTarget || !lift.isBusy()) {
                 lift.setPower(0);
                 state = State.READY;

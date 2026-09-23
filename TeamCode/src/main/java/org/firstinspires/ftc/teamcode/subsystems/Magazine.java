@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
-import org.firstinspires.ftc.teamcode.constants.RobotConfig;
+import org.firstinspires.ftc.teamcode.constants.MagazineConfig;
 import org.firstinspires.ftc.teamcode.game.ElementInventory;
 import org.firstinspires.ftc.teamcode.game.ScoringElement;
 
@@ -24,8 +24,8 @@ public final class Magazine extends SubsystemBase {
 
     public Magazine(HardwareMap hardwareMap, ElementInventory inventory) {
         this.inventory = inventory;
-        gate = hardwareMap.get(Servo.class, RobotConfig.Hardware.MAGAZINE_GATE);
-        exitBeam = hardwareMap.tryGet(DigitalChannel.class, RobotConfig.Hardware.MAGAZINE_EXIT_BEAM);
+        gate = hardwareMap.get(Servo.class, MagazineConfig.GATE);
+        exitBeam = hardwareMap.tryGet(DigitalChannel.class, MagazineConfig.EXIT_BEAM);
         if (exitBeam != null) exitBeam.setMode(DigitalChannel.Mode.INPUT);
         previousExitBlocked = exitBlocked();
         close();
@@ -35,7 +35,7 @@ public final class Magazine extends SubsystemBase {
         if (state == State.FEEDING || inventory.peekNext() == null) return false;
         state = State.FEEDING;
         feedTimer.reset();
-        gate.setPosition(RobotConfig.Magazine.GATE_FEED);
+        gate.setPosition(MagazineConfig.GATE_FEED);
         return true;
     }
 
@@ -62,7 +62,7 @@ public final class Magazine extends SubsystemBase {
         previousExitBlocked = blocked;
 
         if (state == State.FEEDING
-                && (crossedExit || feedTimer.seconds() >= RobotConfig.Magazine.FEED_SECONDS)) {
+                && (crossedExit || feedTimer.seconds() >= MagazineConfig.FEED_SECONDS)) {
             feedCompleted = true;
             close();
         }
@@ -70,12 +70,12 @@ public final class Magazine extends SubsystemBase {
 
     private void close() {
         state = State.CLOSED;
-        gate.setPosition(RobotConfig.Magazine.GATE_CLOSED);
+        gate.setPosition(MagazineConfig.GATE_CLOSED);
     }
 
     private boolean exitBlocked() {
         if (exitBeam == null) return false;
-        return RobotConfig.Magazine.EXIT_BEAM_ACTIVE_LOW
+        return MagazineConfig.EXIT_BEAM_ACTIVE_LOW
                 ? !exitBeam.getState() : exitBeam.getState();
     }
 }

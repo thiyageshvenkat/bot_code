@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.auto;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 
-import org.firstinspires.ftc.teamcode.constants.RobotConfig;
+import org.firstinspires.ftc.teamcode.constants.AutoConfig;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
 
 import static com.pedropathing.api.Paths.line;
@@ -25,12 +25,12 @@ public final class BiobuzzAutoPlan {
     }
 
     public static BiobuzzAutoPlan forAlliance(AllianceColor alliance) {
-        Pose blueStart = degrees(RobotConfig.Auto.START_X,
-                RobotConfig.Auto.START_Y, RobotConfig.Auto.START_HEADING_DEG);
-        Pose blueShoot = degrees(RobotConfig.Auto.SHOOT_X,
-                RobotConfig.Auto.SHOOT_Y, RobotConfig.Auto.SHOOT_HEADING_DEG);
-        Pose bluePark = degrees(RobotConfig.Auto.PARK_X,
-                RobotConfig.Auto.PARK_Y, RobotConfig.Auto.PARK_HEADING_DEG);
+        Pose blueStart = degrees(AutoConfig.START_X,
+                AutoConfig.START_Y, AutoConfig.START_HEADING_DEG);
+        Pose blueShoot = degrees(AutoConfig.SHOOT_X,
+                AutoConfig.SHOOT_Y, AutoConfig.SHOOT_HEADING_DEG);
+        Pose bluePark = degrees(AutoConfig.PARK_X,
+                AutoConfig.PARK_Y, AutoConfig.PARK_HEADING_DEG);
         if (alliance == AllianceColor.BLUE) {
             return new BiobuzzAutoPlan(blueStart, blueShoot, bluePark);
         }

@@ -37,7 +37,7 @@ public final class ElementInventory {
     }
 
     public synchronized int remainingCapacity() {
-        return Math.max(0, org.firstinspires.ftc.teamcode.constants.RobotConfig.Magazine.CAPACITY
+        return Math.max(0, org.firstinspires.ftc.teamcode.constants.MagazineConfig.CAPACITY
                 - elements.size());
     }
 

@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
-import org.firstinspires.ftc.teamcode.constants.RobotConfig;
+import org.firstinspires.ftc.teamcode.constants.DriveConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.util.opMode.Bot;
 
@@ -20,7 +20,7 @@ public class Drivetrain extends SubsystemBase {
     private final Follower follower;
 
     private boolean isRobotCentric = false;
-    private double speedScale = RobotConfig.Drive.NORMAL_SCALE;
+    private double speedScale = DriveConfig.NORMAL_SCALE;
 
     /**
      * Every {@code Subsystem} should take only the {@code HardwareMap} into its constructor.
@@ -58,8 +58,8 @@ public class Drivetrain extends SubsystemBase {
 
     public void setPrecisionMode(boolean enabled) {
         speedScale = enabled
-                ? RobotConfig.Drive.PRECISION_SCALE
-                : RobotConfig.Drive.NORMAL_SCALE;
+                ? DriveConfig.PRECISION_SCALE
+                : DriveConfig.NORMAL_SCALE;
     }
 
     public void setMovement(double forward, double strafe, double turn) {
@@ -125,9 +125,9 @@ public class Drivetrain extends SubsystemBase {
 
     private static double shape(double input) {
         double clipped = Range.clip(input, -1.0, 1.0);
-        if (Math.abs(clipped) <= RobotConfig.Drive.STICK_DEADBAND) return 0.0;
-        double normalized = (Math.abs(clipped) - RobotConfig.Drive.STICK_DEADBAND)
-                / (1.0 - RobotConfig.Drive.STICK_DEADBAND);
+        if (Math.abs(clipped) <= DriveConfig.STICK_DEADBAND) return 0.0;
+        double normalized = (Math.abs(clipped) - DriveConfig.STICK_DEADBAND)
+                / (1.0 - DriveConfig.STICK_DEADBAND);
         return Math.copySign(normalized * normalized * normalized, clipped);
     }
 }
