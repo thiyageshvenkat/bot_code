@@ -66,10 +66,13 @@ public final class RobotConfig {
 
     public static final class Shooter {
         private Shooter() {}
+        public static boolean RIGHT_FLYWHEEL_REVERSED = true;
+        public static boolean FEEDER_REVERSED = false;
         public static double DEFAULT_VELOCITY_TPS = 1850.0; // TUNE
         public static double VELOCITY_TOLERANCE_TPS = 75.0;
         public static double READY_HOLD_SECONDS = 0.12;
         public static double FEED_POWER = 0.85;
+        public static double FEED_SECONDS = 0.18;
         public static double HOOD_STOW = 0.16; // TUNE
         public static double HOOD_NEAR = 0.43; // TUNE
         public static double HOOD_FAR = 0.62; // TUNE
