@@ -112,5 +112,8 @@ public final class RobotConfig {
         public static double PARK_Y = 66.0; // TUNE
         public static double PARK_HEADING_DEG = 90.0; // TUNE
         public static double PATH_TIMEOUT_SECONDS = 6.0;
+        public static double ALIGN_TIMEOUT_SECONDS = 2.5;
+        public static double SHOOT_CUTOFF_SECONDS = 21.5;
+        public static double MATCH_SAFETY_CUTOFF_SECONDS = 29.0;
     }
 }
