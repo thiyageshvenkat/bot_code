@@ -20,6 +20,7 @@ public final class Magazine extends SubsystemBase {
     private final ElapsedTime feedTimer = new ElapsedTime();
     private State state = State.CLOSED;
     private boolean previousExitBlocked;
+    private boolean feedCompleted;
 
     public Magazine(HardwareMap hardwareMap, ElementInventory inventory) {
         this.inventory = inventory;
@@ -46,6 +47,12 @@ public final class Magazine extends SubsystemBase {
     public boolean isFeeding() { return state == State.FEEDING; }
     public ScoringElement nextElement() { return inventory.peekNext(); }
 
+    public boolean consumeFeedCompleted() {
+        boolean completed = feedCompleted;
+        feedCompleted = false;
+        return completed;
+    }
+
     @Override
     public void periodic() {
         boolean blocked = exitBlocked();
@@ -54,7 +61,7 @@ public final class Magazine extends SubsystemBase {
 
         if (state == State.FEEDING
                 && (crossedExit || feedTimer.seconds() >= RobotConfig.Magazine.FEED_SECONDS)) {
-            inventory.releaseNext();
+            feedCompleted = true;
             close();
         }
     }

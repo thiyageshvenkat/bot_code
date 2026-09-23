@@ -25,6 +25,7 @@ public final class Shooter extends SubsystemBase {
 
     private State state = State.STOPPED;
     private double targetVelocity;
+    private boolean shotCompleted;
 
     public Shooter(HardwareMap hardwareMap) {
         leftFlywheel = hardwareMap.get(DcMotorEx.class, RobotConfig.Hardware.FLYWHEEL_LEFT);
@@ -77,6 +78,12 @@ public final class Shooter extends SubsystemBase {
     public double getLeftVelocity() { return leftFlywheel.getVelocity(); }
     public double getRightVelocity() { return rightFlywheel.getVelocity(); }
 
+    public boolean consumeShotCompleted() {
+        boolean completed = shotCompleted;
+        shotCompleted = false;
+        return completed;
+    }
+
     @Override
     public void periodic() {
         if (state == State.STOPPED) return;
@@ -97,6 +104,7 @@ public final class Shooter extends SubsystemBase {
         } else if (state == State.FEEDING
                 && feedTimer.seconds() >= RobotConfig.Shooter.FEED_SECONDS) {
             feeder.setPower(0);
+            shotCompleted = true;
             state = State.SPINNING;
             readyTimer.reset();
         }
