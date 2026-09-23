@@ -42,7 +42,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public void startTeleOp() {
-        follower.startTeleOpDrive(true);
+        follower.manual(0, 0, 0);
     }
     public void startAuto() {
         follower.activateAllPIDFs();
