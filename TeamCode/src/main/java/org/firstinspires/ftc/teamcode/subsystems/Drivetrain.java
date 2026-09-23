@@ -4,7 +4,6 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
-import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
@@ -62,10 +61,7 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public void followPath(Path path) {
-        follower.followPath(path);
-    }
-    public void followPath(PathChain pathChain) {
-        follower.followPath(pathChain);
+        follower.follow(path);
     }
 
     public void setPose(Pose pose) {
