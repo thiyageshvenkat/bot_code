@@ -71,6 +71,6 @@ public class Drivetrain extends SubsystemBase {
 
 
     public Pose getPose() {
-        return follower.getPose();
+        return follower.pose();
     }
 }
