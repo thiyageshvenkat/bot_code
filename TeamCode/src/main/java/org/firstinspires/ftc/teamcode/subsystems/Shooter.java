@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 import org.firstinspires.ftc.teamcode.constants.ShooterConfig;
-import org.firstinspires.ftc.teamcode.control.ShotSolution;
+import org.firstinspires.ftc.teamcode.control.ShotModel;
 
 /** Dual-flywheel hive launcher with speed qualification and timed feeding. */
 public final class Shooter extends SubsystemBase {
@@ -43,7 +43,7 @@ public final class Shooter extends SubsystemBase {
         stop();
     }
 
-    public void prepare(ShotSolution solution) {
+    public void prepare(ShotModel.Solution solution) {
         if (solution == null) return;
         targetVelocity = Math.max(0.0, solution.flywheelVelocity);
         hood.setPosition(Range.clip(solution.hoodPosition, 0.0, 1.0));

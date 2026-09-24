@@ -8,10 +8,10 @@ import org.junit.Test;
 
 public class ShotModelTest {
     @Test public void distanceTableInterpolatesMonotonically() {
-        ShotSolution near = ShotModel.forDistance(ShooterConfig.NEAR_DISTANCE_IN);
-        ShotSolution middle = ShotModel.forDistance(
+        ShotModel.Solution near = ShotModel.forDistance(ShooterConfig.NEAR_DISTANCE_IN);
+        ShotModel.Solution middle = ShotModel.forDistance(
                 (ShooterConfig.NEAR_DISTANCE_IN + ShooterConfig.FAR_DISTANCE_IN) / 2.0);
-        ShotSolution far = ShotModel.forDistance(ShooterConfig.FAR_DISTANCE_IN);
+        ShotModel.Solution far = ShotModel.forDistance(ShooterConfig.FAR_DISTANCE_IN);
         assertTrue(near.flywheelVelocity < middle.flywheelVelocity);
         assertTrue(middle.flywheelVelocity < far.flywheelVelocity);
         assertTrue(near.hoodPosition < far.hoodPosition);

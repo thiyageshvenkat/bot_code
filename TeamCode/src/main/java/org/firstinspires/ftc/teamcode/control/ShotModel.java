@@ -6,30 +6,31 @@ import org.firstinspires.ftc.teamcode.constants.ShooterConfig;
 public final class ShotModel {
     private ShotModel() {}
 
-    public static ShotSolution forDistance(double distanceInches) {
-        double distance = finiteOr(distanceInches, ShooterConfig.NEAR_DISTANCE_IN);
+    public static final class Solution {
+        public final double flywheelVelocity;
+        public final double hoodPosition;
+
+        private Solution(double flywheelVelocity, double hoodPosition) {
+            this.flywheelVelocity = flywheelVelocity;
+            this.hoodPosition = hoodPosition;
+        }
+    }
+
+    public static Solution forDistance(double distanceInches) {
+        double distance = Double.isFinite(distanceInches)
+                ? distanceInches : ShooterConfig.NEAR_DISTANCE_IN;
         double denominator = ShooterConfig.FAR_DISTANCE_IN
                 - ShooterConfig.NEAR_DISTANCE_IN;
         double t = denominator == 0.0 ? 0.0
                 : (distance - ShooterConfig.NEAR_DISTANCE_IN) / denominator;
-        t = clamp(t, 0.0, 1.0);
-
-        double hood = lerp(ShooterConfig.HOOD_NEAR,
-                ShooterConfig.HOOD_FAR, t);
+        t = Math.max(0.0, Math.min(1.0, t));
+        double hood = lerp(ShooterConfig.HOOD_NEAR, ShooterConfig.HOOD_FAR, t);
         double velocity = ShooterConfig.DEFAULT_VELOCITY_TPS
                 * lerp(0.88, 1.12, t);
-        return new ShotSolution(distance, velocity, hood);
+        return new Solution(velocity, hood);
     }
 
     private static double lerp(double a, double b, double t) {
         return a + (b - a) * t;
-    }
-
-    private static double clamp(double value, double min, double max) {
-        return Math.max(min, Math.min(max, value));
-    }
-
-    private static double finiteOr(double value, double fallback) {
-        return Double.isFinite(value) ? value : fallback;
     }
 }

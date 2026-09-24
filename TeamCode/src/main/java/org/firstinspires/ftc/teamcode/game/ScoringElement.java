@@ -5,10 +5,6 @@ public enum ScoringElement {
     RED_NECTAR,
     BLUE_NECTAR;
 
-    public boolean isNectar() {
-        return this != POLLEN;
-    }
-
     public boolean belongsTo(AllianceColor alliance) {
         return this == POLLEN
                 || (alliance == AllianceColor.RED && this == RED_NECTAR)

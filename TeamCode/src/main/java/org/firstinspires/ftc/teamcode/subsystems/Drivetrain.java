@@ -54,8 +54,6 @@ public class Drivetrain extends SubsystemBase {
     public void driveRobotCentric() { isRobotCentric = true; }
     public void driveFieldCentric() { isRobotCentric = false; }
 
-    public boolean isRobotCentric() { return isRobotCentric; }
-
     public void setPrecisionMode(boolean enabled) {
         speedScale = enabled
                 ? DriveConfig.PRECISION_SCALE
@@ -65,18 +63,6 @@ public class Drivetrain extends SubsystemBase {
     public void setMovement(double forward, double strafe, double turn) {
         applyMovement(shape(forward) * speedScale, shape(strafe) * speedScale,
                 shape(turn) * speedScale);
-    }
-
-    /** Driver translation with an already-shaped closed-loop turn command. */
-    public void setMovementWithRawTurn(double forward, double strafe, double turn) {
-        applyMovement(shape(forward) * speedScale, shape(strafe) * speedScale,
-                Range.clip(turn, -1.0, 1.0));
-    }
-
-    /** Direct normalized controller output for autonomous alignment. */
-    public void setRawMovement(double forward, double strafe, double turn) {
-        applyMovement(Range.clip(forward, -1.0, 1.0), Range.clip(strafe, -1.0, 1.0),
-                Range.clip(turn, -1.0, 1.0));
     }
 
     private void applyMovement(double forward, double strafe, double turn) {
@@ -112,10 +98,6 @@ public class Drivetrain extends SubsystemBase {
 
     public Pose getPose() {
         return follower.pose();
-    }
-
-    public Follower getFollower() {
-        return follower;
     }
 
     @Override

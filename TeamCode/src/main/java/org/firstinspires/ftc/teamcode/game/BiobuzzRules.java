@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode.game;
 
 /** Pure rule gates used by both TeleOp and autonomous coordination. */
 public final class BiobuzzRules {
-    public static final double AUTO_SECONDS = 30.0;
-    public static final double TELEOP_SECONDS = 120.0;
     public static final int MAX_CONTROLLED_ELEMENTS = 4;
 
     private BiobuzzRules() {}

@@ -12,12 +12,10 @@ public final class PollenVision implements AutoCloseable {
     public static final class Target {
         public final double bearingDegrees;
         public final double areaPercent;
-        public final double confidence;
 
-        Target(double bearingDegrees, double areaPercent, double confidence) {
+        Target(double bearingDegrees, double areaPercent) {
             this.bearingDegrees = bearingDegrees;
             this.areaPercent = areaPercent;
-            this.confidence = confidence;
         }
     }
 
@@ -38,7 +36,7 @@ public final class PollenVision implements AutoCloseable {
             if (!VisionConfig.POLLEN_CLASS.equals(detection.getClassName())
                     || detection.getConfidence() < VisionConfig.MIN_CONFIDENCE) continue;
             Target candidate = new Target(detection.getTargetXDegrees(),
-                    detection.getTargetArea(), detection.getConfidence());
+                    detection.getTargetArea());
             if (best == null || candidate.areaPercent > best.areaPercent) best = candidate;
         }
         return best;

@@ -36,23 +36,8 @@ public final class ElementInventory {
         return elements.size();
     }
 
-    public synchronized int remainingCapacity() {
-        return Math.max(0, BiobuzzRules.MAX_CONTROLLED_ELEMENTS
-                - elements.size());
-    }
-
-    public synchronized boolean isFull() {
-        return !BiobuzzRules.canControlAnother(elements.size());
-    }
-
     public synchronized ScoringElement peekNext() {
         return elements.peekFirst();
-    }
-
-    public synchronized int count(ScoringElement type) {
-        int count = 0;
-        for (ScoringElement element : elements) if (element == type) count++;
-        return count;
     }
 
     public synchronized List<ScoringElement> snapshot() {
