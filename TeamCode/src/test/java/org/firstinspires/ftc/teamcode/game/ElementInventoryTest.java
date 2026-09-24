@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.game;
 
+import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
+import org.firstinspires.ftc.teamcode.game.ElementInventory.ScoringElement;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;

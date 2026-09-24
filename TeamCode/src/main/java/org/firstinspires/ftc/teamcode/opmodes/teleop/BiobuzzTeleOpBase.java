@@ -3,8 +3,8 @@ package org.firstinspires.ftc.teamcode.opmodes.teleop;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.control.Superstructure;
-import org.firstinspires.ftc.teamcode.game.AllianceColor;
-import org.firstinspires.ftc.teamcode.game.ScoringElement;
+import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
+import org.firstinspires.ftc.teamcode.game.ElementInventory.ScoringElement;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.vision.PollenVision;
 

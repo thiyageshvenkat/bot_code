@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.control.ShotModel;
 import org.firstinspires.ftc.teamcode.control.Superstructure;
-import org.firstinspires.ftc.teamcode.game.AllianceColor;
+import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.vision.PollenVision;
 

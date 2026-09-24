@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-import org.firstinspires.ftc.teamcode.game.AllianceColor;
+import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
 
 @Autonomous(name = "BIOBUZZ Red Preload + Park", group = "BIOBUZZ")
 public final class BiobuzzRedAuto extends BiobuzzAutoBase {

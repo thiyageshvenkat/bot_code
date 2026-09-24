@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.auto;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.firstinspires.ftc.teamcode.game.AllianceColor;
+import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
 import org.junit.Test;
 
 public class BiobuzzAutoPlanTest {

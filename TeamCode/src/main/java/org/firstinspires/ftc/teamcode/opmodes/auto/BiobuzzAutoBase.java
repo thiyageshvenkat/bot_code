@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.auto.BiobuzzAutoPlan;
 import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.control.Superstructure;
-import org.firstinspires.ftc.teamcode.game.AllianceColor;
+import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 
 /** Shared, timeout-protected preload scoring autonomous. */

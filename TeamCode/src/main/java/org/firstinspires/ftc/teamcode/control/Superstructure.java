@@ -3,9 +3,9 @@ package org.firstinspires.ftc.teamcode.control;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.constants.RobotConfig;
-import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.firstinspires.ftc.teamcode.game.ElementInventory;
-import org.firstinspires.ftc.teamcode.game.ScoringElement;
+import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
+import org.firstinspires.ftc.teamcode.game.ElementInventory.ScoringElement;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.vision.PollenVision;
