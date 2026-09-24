@@ -2,12 +2,12 @@ package org.firstinspires.ftc.teamcode.opmodes.diagnostics;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
 import org.firstinspires.ftc.teamcode.control.ShotModel;
 import org.firstinspires.ftc.teamcode.control.Superstructure;
 import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
-import org.firstinspires.ftc.teamcode.vision.PollenVision;
 
 /** Hold-to-run checks for the hardware documented by the existing robot code. */
 @TeleOp(name = "BIOBUZZ Pit Diagnostics", group = "BIOBUZZ Diagnostics")
@@ -41,7 +41,7 @@ public final class BiobuzzPitDiagnostics extends OpMode {
 
         drivetrain.periodic();
         superstructure.periodic();
-        PollenVision.Target target = superstructure.vision.bestPollen();
+        LLResultTypes.DetectorResult target = superstructure.vision.bestPollen();
         telemetry.addData("ARMED", armed);
         telemetry.addData("Pose", drivetrain.getPose());
         telemetry.addData("Intake", superstructure.intake.getState());
@@ -50,7 +50,8 @@ public final class BiobuzzPitDiagnostics extends OpMode {
                 superstructure.shooter.getRightVelocity());
         telemetry.addData("Limelight", superstructure.vision.isConnected());
         telemetry.addData("Pollen", target == null ? "not visible"
-                : String.format("%.1f deg, %.2f%%", target.bearingDegrees, target.areaPercent));
+                : String.format("%.1f deg, %.2f%%", target.getTargetXDegrees(),
+                target.getTargetArea()));
         telemetry.update();
     }
 

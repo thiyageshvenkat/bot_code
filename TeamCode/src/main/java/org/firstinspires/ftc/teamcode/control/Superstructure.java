@@ -26,7 +26,9 @@ public final class Superstructure implements AutoCloseable {
 
     public void seedPreloadPollen() {
         inventory.clear();
-        for (int i = 0; i < 4; i++) inventory.tryAdd(ScoringElement.POLLEN);
+        for (int i = 0; i < ElementInventory.CAPACITY; i++) {
+            inventory.tryAdd(ScoringElement.POLLEN);
+        }
     }
 
     public void prepareHiveShot() {

@@ -9,16 +9,6 @@ import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 
 /** Minimal adapter for the confirmed Limelight neural pollen detector. */
 public final class PollenVision implements AutoCloseable {
-    public static final class Target {
-        public final double bearingDegrees;
-        public final double areaPercent;
-
-        Target(double bearingDegrees, double areaPercent) {
-            this.bearingDegrees = bearingDegrees;
-            this.areaPercent = areaPercent;
-        }
-    }
-
     private final Limelight3A limelight;
 
     public PollenVision(HardwareMap hardwareMap) {
@@ -28,16 +18,14 @@ public final class PollenVision implements AutoCloseable {
         limelight.start();
     }
 
-    public Target bestPollen() {
+    public LLResultTypes.DetectorResult bestPollen() {
         LLResult result = limelight.getLatestResult();
         if (result == null || !result.isValid()) return null;
-        Target best = null;
+        LLResultTypes.DetectorResult best = null;
         for (LLResultTypes.DetectorResult detection : result.getDetectorResults()) {
             if (!RobotConfig.Vision.POLLEN_CLASS.equals(detection.getClassName())
                     || detection.getConfidence() < RobotConfig.Vision.MIN_CONFIDENCE) continue;
-            Target candidate = new Target(detection.getTargetXDegrees(),
-                    detection.getTargetArea());
-            if (best == null || candidate.areaPercent > best.areaPercent) best = candidate;
+            if (best == null || detection.getTargetArea() > best.getTargetArea()) best = detection;
         }
         return best;
     }

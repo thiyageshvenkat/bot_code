@@ -24,10 +24,8 @@ public final class ShotModel {
         double t = denominator == 0.0 ? 0.0
                 : (distance - RobotConfig.Shooter.NEAR_DISTANCE_IN) / denominator;
         t = Math.max(0.0, Math.min(1.0, t));
-        double hood = lerp(RobotConfig.Shooter.HOOD_NEAR, RobotConfig.Shooter.HOOD_FAR, t);
-        double velocity = RobotConfig.Shooter.DEFAULT_VELOCITY_TPS
-                * lerp(0.88, 1.12, t);
-        return new Solution(velocity, hood);
+        return new Solution(RobotConfig.Shooter.DEFAULT_VELOCITY_TPS * lerp(0.88, 1.12, t),
+                lerp(RobotConfig.Shooter.HOOD_NEAR, RobotConfig.Shooter.HOOD_FAR, t));
     }
 
     private static double lerp(double a, double b, double t) {

@@ -20,8 +20,7 @@ public final class Shooter extends SubsystemBase {
     private final DcMotorEx rightFlywheel;
     private final DcMotorEx feeder;
     private final Servo hood;
-    private final ElapsedTime readyTimer = new ElapsedTime();
-    private final ElapsedTime feedTimer = new ElapsedTime();
+    private final ElapsedTime stateTimer = new ElapsedTime();
 
     private State state = State.STOPPED;
     private double targetVelocity;
@@ -51,14 +50,14 @@ public final class Shooter extends SubsystemBase {
         rightFlywheel.setVelocity(targetVelocity);
         if (state == State.STOPPED) {
             state = State.SPINNING;
-            readyTimer.reset();
+            stateTimer.reset();
         }
     }
 
     public boolean requestFeed() {
         if (state != State.READY) return false;
         state = State.FEEDING;
-        feedTimer.reset();
+        stateTimer.reset();
         feeder.setPower(RobotConfig.Shooter.FEED_POWER);
         return true;
     }
@@ -93,19 +92,19 @@ public final class Shooter extends SubsystemBase {
                 <= RobotConfig.Shooter.VELOCITY_TOLERANCE_TPS;
 
         if (state == State.SPINNING) {
-            if (!atSpeed) readyTimer.reset();
-            else if (readyTimer.seconds() >= RobotConfig.Shooter.READY_HOLD_SECONDS) {
+            if (!atSpeed) stateTimer.reset();
+            else if (stateTimer.seconds() >= RobotConfig.Shooter.READY_HOLD_SECONDS) {
                 state = State.READY;
             }
         } else if (state == State.READY && !atSpeed) {
             state = State.SPINNING;
-            readyTimer.reset();
+            stateTimer.reset();
         } else if (state == State.FEEDING
-                && feedTimer.seconds() >= RobotConfig.Shooter.FEED_SECONDS) {
+                && stateTimer.seconds() >= RobotConfig.Shooter.FEED_SECONDS) {
             feeder.setPower(0);
             shotCompleted = true;
             state = State.SPINNING;
-            readyTimer.reset();
+            stateTimer.reset();
         }
     }
 

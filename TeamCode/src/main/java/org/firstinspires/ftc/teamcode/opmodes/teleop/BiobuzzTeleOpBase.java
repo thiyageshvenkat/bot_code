@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
 import org.firstinspires.ftc.teamcode.control.Superstructure;
 import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
 import org.firstinspires.ftc.teamcode.game.ElementInventory.ScoringElement;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
-import org.firstinspires.ftc.teamcode.vision.PollenVision;
 
 /** Shared competition controls; registered red and blue variants provide alliance-safe nectar handling. */
 abstract class BiobuzzTeleOpBase extends OpMode {
@@ -42,16 +42,13 @@ abstract class BiobuzzTeleOpBase extends OpMode {
 
     @Override
     public void loop() {
-        double forward = -gamepad1.left_stick_y;
-        double strafe = gamepad1.left_stick_x;
-        double turn = gamepad1.right_stick_x;
         drivetrain.setPrecisionMode(gamepad1.right_trigger > 0.4);
-        drivetrain.setMovement(forward, strafe, turn);
+        drivetrain.setMovement(-gamepad1.left_stick_y, gamepad1.left_stick_x,
+                gamepad1.right_stick_x);
 
         if (gamepad2.a || gamepad2.x) superstructure.intake.collect();
-        else if (gamepad2.y) {
-            superstructure.intake.reverse();
-        } else superstructure.intake.stop();
+        else if (gamepad2.y) superstructure.intake.reverse();
+        else superstructure.intake.stop();
 
         if (gamepad2.right_bumper) superstructure.prepareHiveShot();
         boolean shoot = gamepad2.right_trigger > 0.5;
@@ -79,7 +76,7 @@ abstract class BiobuzzTeleOpBase extends OpMode {
     }
 
     private void publishTelemetry() {
-        PollenVision.Target target = superstructure.vision.bestPollen();
+        LLResultTypes.DetectorResult target = superstructure.vision.bestPollen();
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Inventory", superstructure.inventory.snapshot());
         telemetry.addData("Intake", superstructure.intake.getState());
@@ -88,7 +85,8 @@ abstract class BiobuzzTeleOpBase extends OpMode {
                 superstructure.shooter.getRightVelocity(), superstructure.shooter.getTargetVelocity());
         telemetry.addData("Limelight", superstructure.vision.isConnected());
         telemetry.addData("Pollen", target == null ? "not visible"
-                : String.format("%.1f deg, %.2f%%", target.bearingDegrees, target.areaPercent));
+                : String.format("%.1f deg, %.2f%%", target.getTargetXDegrees(),
+                target.getTargetArea()));
         telemetry.addData("Pose", drivetrain.getPose());
         telemetry.update();
     }

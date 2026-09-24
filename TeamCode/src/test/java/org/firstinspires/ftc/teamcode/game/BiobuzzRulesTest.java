@@ -10,13 +10,18 @@ import org.junit.Test;
 
 public class BiobuzzRulesTest {
     @Test public void fifthElementIsRejected() {
-        assertTrue(ElementInventory.canControlAnother(3));
-        assertFalse(ElementInventory.canControlAnother(4));
+        ElementInventory inventory = new ElementInventory(AllianceColor.RED);
+        for (int i = 0; i < ElementInventory.CAPACITY; i++) {
+            assertTrue(inventory.tryAdd(ScoringElement.POLLEN));
+        }
+        assertFalse(inventory.tryAdd(ScoringElement.POLLEN));
     }
 
     @Test public void opponentNectarIsRejected() {
-        assertFalse(ElementInventory.canCollect(AllianceColor.RED, ScoringElement.BLUE_NECTAR, 0));
-        assertTrue(ElementInventory.canCollect(AllianceColor.RED, ScoringElement.RED_NECTAR, 0));
-        assertTrue(ElementInventory.canCollect(AllianceColor.BLUE, ScoringElement.POLLEN, 0));
+        ElementInventory red = new ElementInventory(AllianceColor.RED);
+        ElementInventory blue = new ElementInventory(AllianceColor.BLUE);
+        assertFalse(red.tryAdd(ScoringElement.BLUE_NECTAR));
+        assertTrue(red.tryAdd(ScoringElement.RED_NECTAR));
+        assertTrue(blue.tryAdd(ScoringElement.POLLEN));
     }
 }

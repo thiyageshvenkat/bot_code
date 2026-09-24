@@ -31,19 +31,11 @@ public final class ElementInventory {
     }
 
     public synchronized boolean tryAdd(ScoringElement element) {
-        if (!canCollect(alliance, element, elements.size())) return false;
+        if (element == null || !element.belongsTo(alliance) || elements.size() >= CAPACITY) {
+            return false;
+        }
         elements.addLast(element);
         return true;
-    }
-
-    public static boolean canControlAnother(int controlledCount) {
-        return controlledCount >= 0 && controlledCount < CAPACITY;
-    }
-
-    public static boolean canCollect(AllianceColor alliance, ScoringElement element,
-                                     int controlledCount) {
-        return element != null && element.belongsTo(alliance)
-                && canControlAnother(controlledCount);
     }
 
     /** Removes the oldest indexed element after a confirmed feed or deposit. */
