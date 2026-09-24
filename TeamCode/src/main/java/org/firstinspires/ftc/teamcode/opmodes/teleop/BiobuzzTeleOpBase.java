@@ -1,24 +1,26 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
 import org.firstinspires.ftc.teamcode.control.Superstructure;
-import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
-import org.firstinspires.ftc.teamcode.game.ElementInventory.ScoringElement;
+import org.firstinspires.ftc.teamcode.game.AllianceColor;
+import org.firstinspires.ftc.teamcode.game.ScoringElement;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
+import org.firstinspires.ftc.teamcode.vision.PollenVision;
 
 /** Shared competition controls; registered red and blue variants provide alliance-safe nectar handling. */
-@TeleOp(name = "BIOBUZZ Competition", group = "BIOBUZZ")
-public final class BiobuzzTeleOpBase extends OpMode {
-    private AllianceColor alliance = AllianceColor.RED;
+abstract class BiobuzzTeleOpBase extends OpMode {
+    private final AllianceColor alliance;
     protected Drivetrain drivetrain;
     protected Superstructure superstructure;
     private boolean previousShoot;
     private boolean previousInventoryAdd;
     private boolean previousInventoryRemove;
     private boolean previousNectarAdd;
+
+    BiobuzzTeleOpBase(AllianceColor alliance) {
+        this.alliance = alliance;
+    }
 
     @Override
     public void init() {
@@ -27,19 +29,11 @@ public final class BiobuzzTeleOpBase extends OpMode {
         superstructure = new Superstructure(hardwareMap, alliance);
         superstructure.seedPreloadPollen();
         telemetry.addLine("BIOBUZZ initialized");
-        telemetry.addLine("During INIT: gamepad1 B = red, X = blue");
         telemetry.addLine("During INIT: operator dpad up/down corrects preload inventory");
     }
 
     @Override
     public void init_loop() {
-        AllianceColor selected = gamepad1.x ? AllianceColor.BLUE
-                : gamepad1.b ? AllianceColor.RED : alliance;
-        if (selected != alliance) {
-            alliance = selected;
-            superstructure.inventory.setAlliance(alliance);
-            superstructure.seedPreloadPollen();
-        }
         updateInventory(false);
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Starting inventory", superstructure.inventory.snapshot());
@@ -82,7 +76,7 @@ public final class BiobuzzTeleOpBase extends OpMode {
     }
 
     private void publishTelemetry() {
-        LLResultTypes.DetectorResult target = superstructure.vision.bestPollen();
+        PollenVision.Target target = superstructure.vision.bestPollen();
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Inventory", superstructure.inventory.snapshot());
         telemetry.addData("Intake", superstructure.intake.getState());
@@ -91,8 +85,7 @@ public final class BiobuzzTeleOpBase extends OpMode {
                 superstructure.shooter.getRightVelocity(), superstructure.shooter.getTargetVelocity());
         telemetry.addData("Limelight", superstructure.vision.isConnected());
         telemetry.addData("Pollen", target == null ? "not visible"
-                : String.format("%.1f deg, %.2f%%", target.getTargetXDegrees(),
-                target.getTargetArea()));
+                : String.format("%.1f deg, %.2f%%", target.bearingDegrees, target.areaPercent));
         telemetry.addData("Pose", drivetrain.getPose());
         telemetry.update();
     }

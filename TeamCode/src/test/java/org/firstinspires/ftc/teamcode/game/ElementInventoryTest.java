@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode.game;
 
-import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
-import org.firstinspires.ftc.teamcode.game.ElementInventory.ScoringElement;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -38,12 +35,4 @@ public class ElementInventoryTest {
         assertEquals(ScoringElement.POLLEN, inventory.peekNext());
     }
 
-    @Test public void allianceChangeClearsInventoryAndChangesNectarFilter() {
-        ElementInventory inventory = new ElementInventory(AllianceColor.RED);
-        inventory.tryAdd(ScoringElement.RED_NECTAR);
-        inventory.setAlliance(AllianceColor.BLUE);
-        assertEquals(0, inventory.size());
-        assertFalse(inventory.tryAdd(ScoringElement.RED_NECTAR));
-        assertTrue(inventory.tryAdd(ScoringElement.BLUE_NECTAR));
-    }
 }

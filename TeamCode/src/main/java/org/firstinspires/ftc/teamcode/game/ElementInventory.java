@@ -10,29 +10,12 @@ import java.util.List;
 public final class ElementInventory {
     public static final int CAPACITY = 4;
 
-    public enum AllianceColor { RED, BLUE }
-
-    public enum ScoringElement {
-        POLLEN, RED_NECTAR, BLUE_NECTAR;
-
-        boolean belongsTo(AllianceColor alliance) {
-            return this == POLLEN
-                    || alliance == AllianceColor.RED && this == RED_NECTAR
-                    || alliance == AllianceColor.BLUE && this == BLUE_NECTAR;
-        }
-    }
-
-    private AllianceColor alliance;
+    private final AllianceColor alliance;
     private final Deque<ScoringElement> elements = new ArrayDeque<>();
 
     public ElementInventory(AllianceColor alliance) {
-        setAlliance(alliance);
-    }
-
-    public synchronized void setAlliance(AllianceColor alliance) {
         if (alliance == null) throw new IllegalArgumentException("alliance is required");
         this.alliance = alliance;
-        elements.clear();
     }
 
     public synchronized boolean tryAdd(ScoringElement element) {

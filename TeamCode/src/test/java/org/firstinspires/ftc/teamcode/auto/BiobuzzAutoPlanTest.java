@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.auto;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
+import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.junit.Test;
 
 public class BiobuzzAutoPlanTest {
@@ -13,25 +13,38 @@ public class BiobuzzAutoPlanTest {
         BiobuzzAutoPlan red = BiobuzzAutoPlan.forAlliance(AllianceColor.RED);
         BiobuzzAutoPlan blue = BiobuzzAutoPlan.forAlliance(AllianceColor.BLUE);
 
-        for (int i = 0; i < red.poses.length; i++) assertMirrored(red.poses[i], blue.poses[i]);
+        assertMirrored(red.start, blue.start);
+        assertMirrored(red.southHiveShoot, blue.southHiveShoot);
+        assertMirrored(red.gardenCollect, blue.gardenCollect);
+        assertMirrored(red.northApproach, blue.northApproach);
+        assertMirrored(red.northCurveExit, blue.northCurveExit);
+        assertMirrored(red.northHiveShoot, blue.northHiveShoot);
+        assertMirrored(red.topFlowerCollect, blue.topFlowerCollect);
+        assertMirrored(red.loadingZonePark, blue.loadingZonePark);
     }
 
     @Test public void bothAlliancesBuildShootAndParkPaths() {
         for (AllianceColor alliance : AllianceColor.values()) {
             BiobuzzAutoPlan plan = BiobuzzAutoPlan.forAlliance(alliance);
-            assertEquals(8, plan.route.length);
-            for (com.pedropathing.paths.Path path : plan.route) assertNotNull(path);
+            assertNotNull(plan.startToSouthHive);
+            assertNotNull(plan.southHiveToGarden);
+            assertNotNull(plan.gardenToNorthApproach);
+            assertNotNull(plan.northCornerCurve);
+            assertNotNull(plan.northCurveToHive);
+            assertNotNull(plan.northHiveToTopFlower);
+            assertNotNull(plan.topFlowerToNorthHive);
+            assertNotNull(plan.northHiveToLoadingZone);
         }
     }
 
     @Test public void suppliedRedEndpointsArePreserved() {
         BiobuzzAutoPlan red = BiobuzzAutoPlan.forAlliance(AllianceColor.RED);
-        assertEquals(56.0, red.poses[BiobuzzAutoPlan.START].x(), EPSILON);
-        assertEquals(8.0, red.poses[BiobuzzAutoPlan.START].y(), EPSILON);
-        assertEquals(59.25, red.poses[BiobuzzAutoPlan.SOUTH_HIVE].x(), EPSILON);
-        assertEquals(42.0, red.poses[BiobuzzAutoPlan.SOUTH_HIVE].y(), EPSILON);
-        assertEquals(8.0, red.poses[BiobuzzAutoPlan.PARK].x(), EPSILON);
-        assertEquals(108.0, red.poses[BiobuzzAutoPlan.PARK].y(), EPSILON);
+        assertEquals(56.0, red.start.x(), EPSILON);
+        assertEquals(8.0, red.start.y(), EPSILON);
+        assertEquals(59.25, red.southHiveShoot.x(), EPSILON);
+        assertEquals(42.0, red.southHiveShoot.y(), EPSILON);
+        assertEquals(8.0, red.loadingZonePark.x(), EPSILON);
+        assertEquals(108.0, red.loadingZonePark.y(), EPSILON);
     }
 
     private static void assertMirrored(com.pedropathing.math.Pose red,
