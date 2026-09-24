@@ -31,7 +31,7 @@ abstract class BiobuzzAutoBase extends OpMode {
         plan = BiobuzzAutoPlan.forAlliance(alliance);
         drivetrain = new Drivetrain(hardwareMap);
         drivetrain.startAuto();
-        drivetrain.setPose(plan.start);
+        drivetrain.setPose(plan.poses[BiobuzzAutoPlan.START]);
         superstructure = new Superstructure(hardwareMap, alliance);
         superstructure.seedPreloadPollen();
         telemetry.addData("BIOBUZZ auto", alliance);
@@ -40,7 +40,7 @@ abstract class BiobuzzAutoBase extends OpMode {
 
     @Override
     public void init_loop() {
-        telemetry.addData("Start pose", plan.start);
+        telemetry.addData("Start pose", plan.poses[BiobuzzAutoPlan.START]);
         telemetry.addData("Limelight connected", superstructure.vision.isConnected());
         telemetry.addLine("Launcher remains stopped until PLAY");
         telemetry.update();
