@@ -49,9 +49,9 @@ and the lift relies only on encoder limits.
    current. Leave margin for battery voltage and mechanism wear.
 9. Characterize launcher speed and hood angle from multiple measured distances.
    Replace the two-point `ShotModel` values only after repeatable trials.
-10. Measure the actual start, shooting, and loading-zone park poses. Test each
-    alliance route slowly with no scoring elements, then add one preload at a
-    time.
+10. Validate the red waypoints imported from
+    `biobuzz_HARDCODED_LINES_WITH_CORNER_CURVE.pp` and the blue mirrored route.
+    Test slowly with no scoring elements, then add one preload at a time.
 
 ## Competition controls
 
