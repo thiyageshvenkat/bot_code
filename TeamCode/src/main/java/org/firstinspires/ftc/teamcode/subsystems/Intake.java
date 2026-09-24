@@ -21,19 +21,21 @@ public final class Intake extends SubsystemBase {
     }
 
     public void collect() {
-        state = State.COLLECTING;
-        motor.setPower(RobotConfig.Intake.COLLECT_POWER);
+        run(State.COLLECTING, RobotConfig.Intake.COLLECT_POWER);
     }
 
     public void reverse() {
-        state = State.REVERSING;
-        motor.setPower(RobotConfig.Intake.REVERSE_POWER);
+        run(State.REVERSING, RobotConfig.Intake.REVERSE_POWER);
     }
 
     public void stop() {
-        state = State.STOPPED;
-        motor.setPower(0);
+        run(State.STOPPED, 0);
     }
 
     public State getState() { return state; }
+
+    private void run(State next, double power) {
+        state = next;
+        motor.setPower(power);
+    }
 }

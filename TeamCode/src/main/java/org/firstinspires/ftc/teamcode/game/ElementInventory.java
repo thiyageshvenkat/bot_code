@@ -44,28 +44,18 @@ public final class ElementInventory {
     }
 
     /** Removes the oldest indexed element after a confirmed feed or deposit. */
-    public synchronized ScoringElement releaseNext() {
-        return elements.pollFirst();
-    }
+    public synchronized ScoringElement releaseNext() { return elements.pollFirst(); }
 
     /** Removes the newest element when the intake reverses it back to the field. */
-    public synchronized ScoringElement rejectNewest() {
-        return elements.pollLast();
-    }
+    public synchronized ScoringElement rejectNewest() { return elements.pollLast(); }
 
-    public synchronized int size() {
-        return elements.size();
-    }
+    public synchronized int size() { return elements.size(); }
 
-    public synchronized ScoringElement peekNext() {
-        return elements.peekFirst();
-    }
+    public synchronized ScoringElement peekNext() { return elements.peekFirst(); }
 
     public synchronized List<ScoringElement> snapshot() {
         return Collections.unmodifiableList(new ArrayList<>(elements));
     }
 
-    public synchronized void clear() {
-        elements.clear();
-    }
+    public synchronized void clear() { elements.clear(); }
 }

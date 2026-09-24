@@ -4,19 +4,15 @@ import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 
 /** Preliminary two-point shot table. Replace points with measured cell-hit data. */
 public final class ShotModel {
-    private ShotModel() {}
+    public final double flywheelVelocity;
+    public final double hoodPosition;
 
-    public static final class Solution {
-        public final double flywheelVelocity;
-        public final double hoodPosition;
-
-        private Solution(double flywheelVelocity, double hoodPosition) {
-            this.flywheelVelocity = flywheelVelocity;
-            this.hoodPosition = hoodPosition;
-        }
+    private ShotModel(double flywheelVelocity, double hoodPosition) {
+        this.flywheelVelocity = flywheelVelocity;
+        this.hoodPosition = hoodPosition;
     }
 
-    public static Solution forDistance(double distanceInches) {
+    public static ShotModel forDistance(double distanceInches) {
         double distance = Double.isFinite(distanceInches)
                 ? distanceInches : RobotConfig.Shooter.NEAR_DISTANCE_IN;
         double denominator = RobotConfig.Shooter.FAR_DISTANCE_IN
@@ -24,7 +20,7 @@ public final class ShotModel {
         double t = denominator == 0.0 ? 0.0
                 : (distance - RobotConfig.Shooter.NEAR_DISTANCE_IN) / denominator;
         t = Math.max(0.0, Math.min(1.0, t));
-        return new Solution(RobotConfig.Shooter.DEFAULT_VELOCITY_TPS * lerp(0.88, 1.12, t),
+        return new ShotModel(RobotConfig.Shooter.DEFAULT_VELOCITY_TPS * lerp(0.88, 1.12, t),
                 lerp(RobotConfig.Shooter.HOOD_NEAR, RobotConfig.Shooter.HOOD_FAR, t));
     }
 

@@ -42,7 +42,7 @@ public final class Shooter extends SubsystemBase {
         stop();
     }
 
-    public void prepare(ShotModel.Solution solution) {
+    public void prepare(ShotModel solution) {
         if (solution == null) return;
         targetVelocity = Math.max(0.0, solution.flywheelVelocity);
         hood.setPosition(Range.clip(solution.hoodPosition, 0.0, 1.0));
