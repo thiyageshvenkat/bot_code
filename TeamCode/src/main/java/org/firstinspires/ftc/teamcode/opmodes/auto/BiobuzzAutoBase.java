@@ -15,7 +15,6 @@ abstract class BiobuzzAutoBase extends OpMode {
 
     private final AllianceColor alliance;
     private final ElapsedTime matchTimer = new ElapsedTime();
-    private final ElapsedTime stateTimer = new ElapsedTime();
     private Drivetrain drivetrain;
     private Superstructure superstructure;
     private BiobuzzAutoPlan plan;
@@ -71,8 +70,7 @@ abstract class BiobuzzAutoBase extends OpMode {
     private void runState() {
         switch (state) {
             case DRIVE_TO_SHOT:
-                if (!drivetrain.isBusy()
-                        || stateTimer.seconds() >= RobotConfig.Auto.PATH_TIMEOUT_SECONDS) {
+                if (!drivetrain.isBusy()) {
                     drivetrain.stop();
                     transition(State.ALIGN_AND_SHOOT);
                 }
@@ -86,16 +84,11 @@ abstract class BiobuzzAutoBase extends OpMode {
                 } else if (!superstructure.isBusy()
                         && superstructure.queueHiveShot()) {
                     shotsRequested++;
-                    stateTimer.reset();
-                } else if (shotsRequested == 0
-                        && stateTimer.seconds() >= RobotConfig.Auto.ALIGN_TIMEOUT_SECONDS) {
-                    beginPark();
                 }
                 break;
 
             case DRIVE_TO_PARK:
-                if (!drivetrain.isBusy()
-                        || stateTimer.seconds() >= RobotConfig.Auto.PATH_TIMEOUT_SECONDS) {
+                if (!drivetrain.isBusy()) {
                     drivetrain.holdCurrentPose();
                     superstructure.shooter.stop();
                     transition(State.DONE);
@@ -116,7 +109,6 @@ abstract class BiobuzzAutoBase extends OpMode {
 
     private void transition(State next) {
         state = next;
-        stateTimer.reset();
     }
 
     private void publishTelemetry() {

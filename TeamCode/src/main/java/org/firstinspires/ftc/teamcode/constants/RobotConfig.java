@@ -40,7 +40,13 @@ public final class RobotConfig {
 
     public static final class Auto {
         private Auto() {}
-        public static double PATH_TIMEOUT_SECONDS = 6, ALIGN_TIMEOUT_SECONDS = 2.5;
-        public static double SHOOT_CUTOFF_SECONDS = 21.5, MATCH_SAFETY_CUTOFF_SECONDS = 29;
+        // Disabled: path transitions now wait for Pedro to report completion.
+        // public static double PATH_TIMEOUT_SECONDS = 6;
+        // Disabled: the first shot may spin up until SHOOT_CUTOFF_SECONDS.
+        // public static double ALIGN_TIMEOUT_SECONDS = 2.5;
+        // Stop requesting shots at 27 seconds, then begin the park path.
+        public static double SHOOT_CUTOFF_SECONDS = 27;
+        // Final fail-safe: stop every mechanism one second before a 30-second auto ends.
+        public static double MATCH_SAFETY_CUTOFF_SECONDS = 29;
     }
 }
