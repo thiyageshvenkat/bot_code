@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
 import org.firstinspires.ftc.teamcode.control.Superstructure;
@@ -9,18 +10,15 @@ import org.firstinspires.ftc.teamcode.game.ElementInventory.ScoringElement;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 
 /** Shared competition controls; registered red and blue variants provide alliance-safe nectar handling. */
-abstract class BiobuzzTeleOpBase extends OpMode {
-    private final AllianceColor alliance;
+@TeleOp(name = "BIOBUZZ Competition", group = "BIOBUZZ")
+public final class BiobuzzTeleOpBase extends OpMode {
+    private AllianceColor alliance = AllianceColor.RED;
     protected Drivetrain drivetrain;
     protected Superstructure superstructure;
     private boolean previousShoot;
     private boolean previousInventoryAdd;
     private boolean previousInventoryRemove;
     private boolean previousNectarAdd;
-
-    BiobuzzTeleOpBase(AllianceColor alliance) {
-        this.alliance = alliance;
-    }
 
     @Override
     public void init() {
@@ -29,11 +27,19 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         superstructure = new Superstructure(hardwareMap, alliance);
         superstructure.seedPreloadPollen();
         telemetry.addLine("BIOBUZZ initialized");
+        telemetry.addLine("During INIT: gamepad1 B = red, X = blue");
         telemetry.addLine("During INIT: operator dpad up/down corrects preload inventory");
     }
 
     @Override
     public void init_loop() {
+        AllianceColor selected = gamepad1.x ? AllianceColor.BLUE
+                : gamepad1.b ? AllianceColor.RED : alliance;
+        if (selected != alliance) {
+            alliance = selected;
+            superstructure.inventory.setAlliance(alliance);
+            superstructure.seedPreloadPollen();
+        }
         updateInventory(false);
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Starting inventory", superstructure.inventory.snapshot());

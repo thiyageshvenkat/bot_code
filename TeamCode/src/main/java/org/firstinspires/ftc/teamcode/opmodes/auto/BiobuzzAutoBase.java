@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes.auto;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -10,10 +11,11 @@ import org.firstinspires.ftc.teamcode.game.ElementInventory.AllianceColor;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 
 /** Shared, timeout-protected preload scoring autonomous. */
-abstract class BiobuzzAutoBase extends OpMode {
+@Autonomous(name = "BIOBUZZ Competition Auto", group = "BIOBUZZ")
+public final class BiobuzzAutoBase extends OpMode {
     private enum State { DRIVE_TO_SHOT, ALIGN_AND_SHOOT, DRIVE_TO_PARK, DONE }
 
-    private final AllianceColor alliance;
+    private AllianceColor alliance = AllianceColor.RED;
     private final ElapsedTime matchTimer = new ElapsedTime();
     private final ElapsedTime stateTimer = new ElapsedTime();
     private Drivetrain drivetrain;
@@ -21,10 +23,6 @@ abstract class BiobuzzAutoBase extends OpMode {
     private BiobuzzAutoPlan plan;
     private State state;
     private int shotsRequested;
-
-    BiobuzzAutoBase(AllianceColor alliance) {
-        this.alliance = alliance;
-    }
 
     @Override
     public void init() {
@@ -35,11 +33,21 @@ abstract class BiobuzzAutoBase extends OpMode {
         superstructure = new Superstructure(hardwareMap, alliance);
         superstructure.seedPreloadPollen();
         telemetry.addData("BIOBUZZ auto", alliance);
+        telemetry.addLine("During INIT: gamepad1 B = red, X = blue");
         telemetry.addLine("Check start pose, hive orientation, and clear park route");
     }
 
     @Override
     public void init_loop() {
+        AllianceColor selected = gamepad1.x ? AllianceColor.BLUE
+                : gamepad1.b ? AllianceColor.RED : alliance;
+        if (selected != alliance) {
+            alliance = selected;
+            plan = BiobuzzAutoPlan.forAlliance(alliance);
+            drivetrain.setPose(plan.poses[BiobuzzAutoPlan.START]);
+            superstructure.inventory.setAlliance(alliance);
+            superstructure.seedPreloadPollen();
+        }
         telemetry.addData("Start pose", plan.poses[BiobuzzAutoPlan.START]);
         telemetry.addData("Limelight connected", superstructure.vision.isConnected());
         telemetry.addLine("Launcher remains stopped until PLAY");

@@ -37,4 +37,13 @@ public class ElementInventoryTest {
         assertEquals(ScoringElement.RED_NECTAR, inventory.rejectNewest());
         assertEquals(ScoringElement.POLLEN, inventory.peekNext());
     }
+
+    @Test public void allianceChangeClearsInventoryAndChangesNectarFilter() {
+        ElementInventory inventory = new ElementInventory(AllianceColor.RED);
+        inventory.tryAdd(ScoringElement.RED_NECTAR);
+        inventory.setAlliance(AllianceColor.BLUE);
+        assertEquals(0, inventory.size());
+        assertFalse(inventory.tryAdd(ScoringElement.RED_NECTAR));
+        assertTrue(inventory.tryAdd(ScoringElement.BLUE_NECTAR));
+    }
 }

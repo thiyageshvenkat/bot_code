@@ -22,12 +22,17 @@ public final class ElementInventory {
         }
     }
 
-    private final AllianceColor alliance;
+    private AllianceColor alliance;
     private final Deque<ScoringElement> elements = new ArrayDeque<>();
 
     public ElementInventory(AllianceColor alliance) {
+        setAlliance(alliance);
+    }
+
+    public synchronized void setAlliance(AllianceColor alliance) {
         if (alliance == null) throw new IllegalArgumentException("alliance is required");
         this.alliance = alliance;
+        elements.clear();
     }
 
     public synchronized boolean tryAdd(ScoringElement element) {
