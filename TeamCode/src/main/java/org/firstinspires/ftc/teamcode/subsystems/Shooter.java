@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
-import org.firstinspires.ftc.teamcode.constants.ShooterConfig;
+import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.control.ShotModel;
 
 /** Dual-flywheel hive launcher with speed qualification and timed feeding. */
@@ -28,15 +28,15 @@ public final class Shooter extends SubsystemBase {
     private boolean shotCompleted;
 
     public Shooter(HardwareMap hardwareMap) {
-        leftFlywheel = hardwareMap.get(DcMotorEx.class, ShooterConfig.LEFT_FLYWHEEL);
-        rightFlywheel = hardwareMap.get(DcMotorEx.class, ShooterConfig.RIGHT_FLYWHEEL);
-        feeder = hardwareMap.get(DcMotorEx.class, ShooterConfig.FEEDER);
-        hood = hardwareMap.get(Servo.class, ShooterConfig.HOOD);
+        leftFlywheel = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.LEFT_FLYWHEEL);
+        rightFlywheel = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.RIGHT_FLYWHEEL);
+        feeder = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.FEEDER);
+        hood = hardwareMap.get(Servo.class, RobotConfig.Shooter.HOOD);
 
         configureFlywheel(leftFlywheel, DcMotorSimple.Direction.FORWARD);
-        configureFlywheel(rightFlywheel, ShooterConfig.RIGHT_FLYWHEEL_REVERSED
+        configureFlywheel(rightFlywheel, RobotConfig.Shooter.RIGHT_FLYWHEEL_REVERSED
                 ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
-        feeder.setDirection(ShooterConfig.FEEDER_REVERSED
+        feeder.setDirection(RobotConfig.Shooter.FEEDER_REVERSED
                 ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
         feeder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         feeder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -59,7 +59,7 @@ public final class Shooter extends SubsystemBase {
         if (state != State.READY) return false;
         state = State.FEEDING;
         feedTimer.reset();
-        feeder.setPower(ShooterConfig.FEED_POWER);
+        feeder.setPower(RobotConfig.Shooter.FEED_POWER);
         return true;
     }
 
@@ -67,13 +67,12 @@ public final class Shooter extends SubsystemBase {
         leftFlywheel.setPower(0);
         rightFlywheel.setPower(0);
         feeder.setPower(0);
-        hood.setPosition(ShooterConfig.HOOD_STOW);
+        hood.setPosition(RobotConfig.Shooter.HOOD_STOW);
         targetVelocity = 0.0;
         state = State.STOPPED;
     }
 
     public State getState() { return state; }
-    public boolean isReady() { return state == State.READY; }
     public double getTargetVelocity() { return targetVelocity; }
     public double getLeftVelocity() { return leftFlywheel.getVelocity(); }
     public double getRightVelocity() { return rightFlywheel.getVelocity(); }
@@ -89,20 +88,20 @@ public final class Shooter extends SubsystemBase {
         if (state == State.STOPPED) return;
 
         boolean atSpeed = Math.abs(leftFlywheel.getVelocity() - targetVelocity)
-                <= ShooterConfig.VELOCITY_TOLERANCE_TPS
+                <= RobotConfig.Shooter.VELOCITY_TOLERANCE_TPS
                 && Math.abs(rightFlywheel.getVelocity() - targetVelocity)
-                <= ShooterConfig.VELOCITY_TOLERANCE_TPS;
+                <= RobotConfig.Shooter.VELOCITY_TOLERANCE_TPS;
 
         if (state == State.SPINNING) {
             if (!atSpeed) readyTimer.reset();
-            else if (readyTimer.seconds() >= ShooterConfig.READY_HOLD_SECONDS) {
+            else if (readyTimer.seconds() >= RobotConfig.Shooter.READY_HOLD_SECONDS) {
                 state = State.READY;
             }
         } else if (state == State.READY && !atSpeed) {
             state = State.SPINNING;
             readyTimer.reset();
         } else if (state == State.FEEDING
-                && feedTimer.seconds() >= ShooterConfig.FEED_SECONDS) {
+                && feedTimer.seconds() >= RobotConfig.Shooter.FEED_SECONDS) {
             feeder.setPower(0);
             shotCompleted = true;
             state = State.SPINNING;

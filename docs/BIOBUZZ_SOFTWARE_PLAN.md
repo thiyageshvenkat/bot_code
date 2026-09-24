@@ -27,8 +27,7 @@ every event.
 
 ## Hardware assumptions
 
-Hardware names and preliminary calibration values live in focused files in the
-`constants` package (`DriveConfig`, `ShooterConfig`, and so on).
+Hardware names and preliminary calibration values live in `RobotConfig`.
 The documented intake, launcher, Limelight, drivetrain, and Pinpoint are
 required. Directions, odometry offsets, PID values, hood endpoints, shot tables,
 and autonomous paths must be measured on the physical robot before competition.

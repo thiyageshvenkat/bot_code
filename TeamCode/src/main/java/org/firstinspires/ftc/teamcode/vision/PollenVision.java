@@ -5,7 +5,7 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.constants.VisionConfig;
+import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 
 /** Minimal adapter for the confirmed Limelight neural pollen detector. */
 public final class PollenVision implements AutoCloseable {
@@ -22,9 +22,9 @@ public final class PollenVision implements AutoCloseable {
     private final Limelight3A limelight;
 
     public PollenVision(HardwareMap hardwareMap) {
-        limelight = hardwareMap.get(Limelight3A.class, VisionConfig.LIMELIGHT);
+        limelight = hardwareMap.get(Limelight3A.class, RobotConfig.Vision.LIMELIGHT);
         limelight.setPollRateHz(50);
-        limelight.pipelineSwitch(VisionConfig.POLLEN_PIPELINE);
+        limelight.pipelineSwitch(RobotConfig.Vision.POLLEN_PIPELINE);
         limelight.start();
     }
 
@@ -33,8 +33,8 @@ public final class PollenVision implements AutoCloseable {
         if (result == null || !result.isValid()) return null;
         Target best = null;
         for (LLResultTypes.DetectorResult detection : result.getDetectorResults()) {
-            if (!VisionConfig.POLLEN_CLASS.equals(detection.getClassName())
-                    || detection.getConfidence() < VisionConfig.MIN_CONFIDENCE) continue;
+            if (!RobotConfig.Vision.POLLEN_CLASS.equals(detection.getClassName())
+                    || detection.getConfidence() < RobotConfig.Vision.MIN_CONFIDENCE) continue;
             Target candidate = new Target(detection.getTargetXDegrees(),
                     detection.getTargetArea());
             if (best == null || candidate.areaPercent > best.areaPercent) best = candidate;

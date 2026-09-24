@@ -2,8 +2,7 @@
 
 This code compiles and its rule/model tests run on a computer. It has not been
 calibrated or field-tested on the physical robot. Treat every value marked
-`TUNE` in the mechanism-specific files under the `constants` package as a
-starting placeholder.
+`TUNE` in `RobotConfig` as a starting placeholder.
 
 ## Required Robot Configuration names
 

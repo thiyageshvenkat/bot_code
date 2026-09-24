@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.control;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.constants.ShooterConfig;
+import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.firstinspires.ftc.teamcode.game.ElementInventory;
 import org.firstinspires.ftc.teamcode.game.ScoringElement;
@@ -30,7 +30,7 @@ public final class Superstructure implements AutoCloseable {
     }
 
     public void prepareHiveShot() {
-        shooter.prepare(ShotModel.forDistance(ShooterConfig.NEAR_DISTANCE_IN));
+        shooter.prepare(ShotModel.forDistance(RobotConfig.Shooter.NEAR_DISTANCE_IN));
     }
 
     public boolean queueHiveShot() {

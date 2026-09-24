@@ -34,16 +34,7 @@ abstract class BiobuzzTeleOpBase extends OpMode {
 
     @Override
     public void init_loop() {
-        boolean add = gamepad2.dpad_up;
-        boolean remove = gamepad2.dpad_down;
-        if (add && !previousInventoryAdd) {
-            superstructure.inventory.tryAdd(ScoringElement.POLLEN);
-        }
-        if (remove && !previousInventoryRemove) {
-            superstructure.inventory.releaseNext();
-        }
-        previousInventoryAdd = add;
-        previousInventoryRemove = remove;
+        updateInventory(false);
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Starting inventory", superstructure.inventory.snapshot());
         telemetry.update();
@@ -67,24 +58,24 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         if (shoot && !previousShoot) superstructure.queueHiveShot();
         previousShoot = shoot;
 
-        boolean pollenAdd = gamepad2.dpad_up;
-        boolean nectarAdd = gamepad2.dpad_right;
-        boolean remove = gamepad2.dpad_down;
-        if (pollenAdd && !previousInventoryAdd) {
-            superstructure.inventory.tryAdd(ScoringElement.POLLEN);
-        }
-        if (nectarAdd && !previousNectarAdd) {
-            superstructure.inventory.tryAdd(alliance == AllianceColor.RED
-                    ? ScoringElement.RED_NECTAR : ScoringElement.BLUE_NECTAR);
-        }
-        if (remove && !previousInventoryRemove) superstructure.inventory.rejectNewest();
-        previousInventoryAdd = pollenAdd;
-        previousNectarAdd = nectarAdd;
-        previousInventoryRemove = remove;
+        updateInventory(true);
 
         drivetrain.periodic();
         superstructure.periodic();
         publishTelemetry();
+    }
+
+    private void updateInventory(boolean allowNectar) {
+        boolean pollen = gamepad2.dpad_up;
+        boolean nectar = allowNectar && gamepad2.dpad_right;
+        boolean remove = gamepad2.dpad_down;
+        if (pollen && !previousInventoryAdd) superstructure.inventory.tryAdd(ScoringElement.POLLEN);
+        if (nectar && !previousNectarAdd) superstructure.inventory.tryAdd(alliance == AllianceColor.RED
+                ? ScoringElement.RED_NECTAR : ScoringElement.BLUE_NECTAR);
+        if (remove && !previousInventoryRemove) superstructure.inventory.rejectNewest();
+        previousInventoryAdd = pollen;
+        previousNectarAdd = nectar;
+        previousInventoryRemove = remove;
     }
 
     private void publishTelemetry() {

@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
-import org.firstinspires.ftc.teamcode.constants.IntakeConfig;
+import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 
 /** Confirmed single-roller intake. Inventory is corrected by the operator. */
 public final class Intake extends SubsystemBase {
@@ -14,7 +14,7 @@ public final class Intake extends SubsystemBase {
     private State state = State.STOPPED;
 
     public Intake(HardwareMap hardwareMap) {
-        motor = hardwareMap.get(DcMotor.class, IntakeConfig.MOTOR);
+        motor = hardwareMap.get(DcMotor.class, RobotConfig.Intake.MOTOR);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         stop();
@@ -22,12 +22,12 @@ public final class Intake extends SubsystemBase {
 
     public void collect() {
         state = State.COLLECTING;
-        motor.setPower(IntakeConfig.COLLECT_POWER);
+        motor.setPower(RobotConfig.Intake.COLLECT_POWER);
     }
 
     public void reverse() {
         state = State.REVERSING;
-        motor.setPower(IntakeConfig.REVERSE_POWER);
+        motor.setPower(RobotConfig.Intake.REVERSE_POWER);
     }
 
     public void stop() {

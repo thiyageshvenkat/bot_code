@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.auto.BiobuzzAutoPlan;
-import org.firstinspires.ftc.teamcode.constants.AutoConfig;
+import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.control.Superstructure;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
@@ -58,7 +58,7 @@ abstract class BiobuzzAutoBase extends OpMode {
         drivetrain.periodic();
         superstructure.periodic();
 
-        if (matchTimer.seconds() >= AutoConfig.MATCH_SAFETY_CUTOFF_SECONDS) {
+        if (matchTimer.seconds() >= RobotConfig.Auto.MATCH_SAFETY_CUTOFF_SECONDS) {
             drivetrain.stop();
             superstructure.stopAll();
             transition(State.DONE);
@@ -72,7 +72,7 @@ abstract class BiobuzzAutoBase extends OpMode {
         switch (state) {
             case DRIVE_TO_SHOT:
                 if (!drivetrain.isBusy()
-                        || stateTimer.seconds() >= AutoConfig.PATH_TIMEOUT_SECONDS) {
+                        || stateTimer.seconds() >= RobotConfig.Auto.PATH_TIMEOUT_SECONDS) {
                     drivetrain.stop();
                     transition(State.ALIGN_AND_SHOOT);
                 }
@@ -81,21 +81,21 @@ abstract class BiobuzzAutoBase extends OpMode {
             case ALIGN_AND_SHOOT:
                 superstructure.prepareHiveShot();
                 if (superstructure.inventory.peekNext() == null
-                        || matchTimer.seconds() >= AutoConfig.SHOOT_CUTOFF_SECONDS) {
+                        || matchTimer.seconds() >= RobotConfig.Auto.SHOOT_CUTOFF_SECONDS) {
                     beginPark();
                 } else if (!superstructure.isBusy()
                         && superstructure.queueHiveShot()) {
                     shotsRequested++;
                     stateTimer.reset();
                 } else if (shotsRequested == 0
-                        && stateTimer.seconds() >= AutoConfig.ALIGN_TIMEOUT_SECONDS) {
+                        && stateTimer.seconds() >= RobotConfig.Auto.ALIGN_TIMEOUT_SECONDS) {
                     beginPark();
                 }
                 break;
 
             case DRIVE_TO_PARK:
                 if (!drivetrain.isBusy()
-                        || stateTimer.seconds() >= AutoConfig.PATH_TIMEOUT_SECONDS) {
+                        || stateTimer.seconds() >= RobotConfig.Auto.PATH_TIMEOUT_SECONDS) {
                     drivetrain.holdCurrentPose();
                     superstructure.shooter.stop();
                     transition(State.DONE);
