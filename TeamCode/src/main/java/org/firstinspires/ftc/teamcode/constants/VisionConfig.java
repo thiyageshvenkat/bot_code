@@ -1,11 +1,11 @@
 package org.firstinspires.ftc.teamcode.constants;
 
-/** Camera name and relative hive-aiming controller values. */
+/** Confirmed Limelight pollen-detector configuration. */
 public final class VisionConfig {
     private VisionConfig() {}
 
-    public static final String WEBCAM = "Webcam 1";
-    public static double AIM_BEARING_TOLERANCE_DEG = 1.5;
-    public static double AIM_TURN_KP = 0.025;
-    public static double MAX_AIM_TURN = 0.38;
+    public static final String LIMELIGHT = "limelight";
+    public static int POLLEN_PIPELINE = 0;
+    public static String POLLEN_CLASS = "yellow_pollen";
+    public static double MIN_CONFIDENCE = 0.40;
 }

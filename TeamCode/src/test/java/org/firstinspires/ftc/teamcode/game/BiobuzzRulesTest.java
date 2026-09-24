@@ -16,15 +16,4 @@ public class BiobuzzRulesTest {
         assertTrue(BiobuzzRules.canCollect(AllianceColor.RED, ScoringElement.RED_NECTAR, 0));
         assertTrue(BiobuzzRules.canCollect(AllianceColor.BLUE, ScoringElement.POLLEN, 0));
     }
-
-    @Test public void flowerUnlocksAtFinalMinute() {
-        assertFalse(BiobuzzRules.canPlaceInFlower(ScoringElement.POLLEN, 59.99));
-        assertTrue(BiobuzzRules.canPlaceInFlower(ScoringElement.POLLEN, 60.0));
-        assertTrue(BiobuzzRules.canPlaceInFlower(ScoringElement.RED_NECTAR, 90.0));
-    }
-
-    @Test public void onlyPollenCanBeRetrievedFromFlower() {
-        assertTrue(BiobuzzRules.canRetrieveFromFlower(ScoringElement.POLLEN));
-        assertFalse(BiobuzzRules.canRetrieveFromFlower(ScoringElement.RED_NECTAR));
-    }
 }

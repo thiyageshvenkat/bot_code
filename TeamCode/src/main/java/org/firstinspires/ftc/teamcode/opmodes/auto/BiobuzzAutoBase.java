@@ -8,7 +8,6 @@ import org.firstinspires.ftc.teamcode.constants.AutoConfig;
 import org.firstinspires.ftc.teamcode.control.Superstructure;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
-import org.firstinspires.ftc.teamcode.vision.HiveObservation;
 
 /** Shared, timeout-protected preload scoring autonomous. */
 abstract class BiobuzzAutoBase extends OpMode {
@@ -41,10 +40,8 @@ abstract class BiobuzzAutoBase extends OpMode {
 
     @Override
     public void init_loop() {
-        HiveObservation target = superstructure.vision.closestCell();
         telemetry.addData("Start pose", plan.start);
-        telemetry.addData("Hive target", target == null ? "not visible"
-                : String.format("%.1f in, %.1f deg", target.rangeInches, target.bearingDegrees));
+        telemetry.addData("Limelight connected", superstructure.vision.isConnected());
         telemetry.addLine("Launcher remains stopped until PLAY");
         telemetry.update();
     }
@@ -83,12 +80,11 @@ abstract class BiobuzzAutoBase extends OpMode {
 
             case ALIGN_AND_SHOOT:
                 superstructure.prepareHiveShot();
-                drivetrain.setRawMovement(0, 0, superstructure.vision.aimTurnPower());
                 if (superstructure.inventory.peekNext() == null
                         || matchTimer.seconds() >= AutoConfig.SHOOT_CUTOFF_SECONDS) {
                     beginPark();
                 } else if (!superstructure.isBusy()
-                        && superstructure.queueHiveShot(true)) {
+                        && superstructure.queueHiveShot()) {
                     shotsRequested++;
                     stateTimer.reset();
                 } else if (shotsRequested == 0
@@ -124,15 +120,13 @@ abstract class BiobuzzAutoBase extends OpMode {
     }
 
     private void publishTelemetry() {
-        HiveObservation target = superstructure.vision.closestCell();
         telemetry.addData("Alliance", alliance);
         telemetry.addData("State", state);
         telemetry.addData("Auto elapsed", "%.1f", matchTimer.seconds());
         telemetry.addData("Pose", drivetrain.getPose());
         telemetry.addData("Inventory", superstructure.inventory.snapshot());
         telemetry.addData("Shots requested", shotsRequested);
-        telemetry.addData("Hive", target == null ? "not visible"
-                : String.format("%.1f in, %.1f deg", target.rangeInches, target.bearingDegrees));
+        telemetry.addData("Limelight connected", superstructure.vision.isConnected());
         telemetry.update();
     }
 
