@@ -53,20 +53,25 @@ public final class RobotConfig {
     public static final class Shooter {
         private Shooter() {}
 
-        // REV configuration name for the single shooter flywheel motor.
-        public static final String FLYWHEEL = "flywheel_left";
+        // REV configuration name for the left motor driving the shared shooter flywheel.
+        public static final String LEFT_FLYWHEEL = "flywheel_left";
+        // REV configuration name for the right motor driving the same shooter flywheel.
+        public static final String RIGHT_FLYWHEEL = "flywheel_right";
         // REV configuration name for the motor that feeds elements into the flywheel.
         public static final String FEEDER = "feeder";
         // REV configuration name for the servo that sets the launch angle.
         public static final String HOOD = "hood";
+        // VERIFY: Rayansh's configuration used false; confirm both motors assist rather than fight
+        // each other before testing them while mechanically coupled to the shared flywheel.
+        public static boolean RIGHT_FLYWHEEL_REVERSED = false;
         // Reverses the feeder direction when its physical installation requires it.
         public static boolean FEEDER_REVERSED = false;
         // TUNE: starting shooter speed; distance adjustment raises or lowers this target.
         public static double SHOOTER_BASE_TARGET_RPM = 4000;
         // TUNE: maximum RPM error allowed before the feeder may run.
         public static double SHOOTER_MAX_READY_ERROR_RPM = 160;
-        // VERIFY: encoder ticks per motor-shaft revolution. The exact shooter motor is not yet
-        // documented; 28 is valid only if its encoder produces 28 ticks per motor revolution.
+        // VERIFY: both intended 1:1 6000-RPM Yellow Jackets produce 28 encoder ticks per revolution.
+        // Confirm the installed motor SKUs and 1:1 connection before relying on displayed RPM.
         public static double SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION = 28;
         // TUNE: seconds the shooter must remain within its allowed RPM error before feeding.
         public static double READY_HOLD_SECONDS = .12;

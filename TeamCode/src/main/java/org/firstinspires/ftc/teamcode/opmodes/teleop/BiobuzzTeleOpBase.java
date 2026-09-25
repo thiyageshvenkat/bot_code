@@ -149,8 +149,9 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         telemetry.addData("Inventory", superstructure.inventory.snapshot());
         telemetry.addData("Intake", superstructure.intake.getState());
         telemetry.addData("Intake capacity lockout", isIntakeCapacityLocked());
-        telemetry.addData("Shooter RPM", "%s | actual: %.0f | target: %.0f",
-                superstructure.shooter.getState(), superstructure.shooter.getSpeedRpm(),
+        telemetry.addData("Shooter RPM", "%s | left: %.0f | right: %.0f | target: %.0f",
+                superstructure.shooter.getState(), superstructure.shooter.getLeftSpeedRpm(),
+                superstructure.shooter.getRightSpeedRpm(),
                 superstructure.shooter.getTargetRpm());
         telemetry.addData("Limelight", superstructure.vision.isConnected());
         if (target == null) {
