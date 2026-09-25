@@ -8,13 +8,13 @@ public final class RobotConfig {
         private Drive() {}
 
         // REV configuration name for the front-left drive motor.
-        public static final String FRONT_LEFT = "front_left_drive";
+        public static final String FRONT_LEFT = "front_left_motor";
         // REV configuration name for the front-right drive motor.
-        public static final String FRONT_RIGHT = "front_right_drive";
+        public static final String FRONT_RIGHT = "front_right_motor";
         // REV configuration name for the back-left drive motor.
-        public static final String BACK_LEFT = "back_left_drive";
+        public static final String BACK_LEFT = "back_left_motor";
         // REV configuration name for the back-right drive motor.
-        public static final String BACK_RIGHT = "back_right_drive";
+        public static final String BACK_RIGHT = "back_right_motor";
         // REV configuration name for the goBILDA Pinpoint odometry computer.
         public static final String PINPOINT = "pinpoint";
         // TUNE: increase only if an untouched joystick causes motor movement.
@@ -94,41 +94,49 @@ public final class RobotConfig {
     public static final class Vision {
         private Vision() {}
 
-        // REV configuration name for the Limelight 3A.
-        public static final String LIMELIGHT = "limelight";
+        // REV configuration name for the required, launcher-aligned Limelight 3A. Every competition
+        // configuration must contain this camera because autonomous Hive aiming depends on it.
+        // Keep the original hardware name so adding the second camera does not break the existing
+        // Robot Configuration; this original camera is now permanently assigned to Hive aiming.
+        public static final String HIVE_LIMELIGHT = "limelight";
+        // REV configuration name for the optional Limelight 3A that detects loose pollen. The robot
+        // continues with Hive targeting when this name is absent from the active configuration.
+        public static final String POLLEN_LIMELIGHT = "pollen_limelight";
         // Exact neural-detector label used to identify pollen.
         public static final String POLLEN_CLASS = "yellow_pollen";
-        // VERIFY: Limelight neural-detector pipeline selected when vision starts.
+        // VERIFY: neural-detector pipeline stored on the pollen Limelight.
         public static int POLLEN_PIPELINE = 0;
-        // VERIFY: use 36h11, 82.55-mm tags and Full 3D on this Limelight pipeline. See ROBOT_SETUP.
+        // VERIFY: use 36h11, 82.55-mm tags and Full 3D on the Hive Limelight. See ROBOT_SETUP.
         public static int HIVE_APRILTAG_PIPELINE = 1;
         // TUNE: detections below this confidence, from zero to one, are ignored.
         public static double MIN_CONFIDENCE = .40;
-        // TUNE: opening bearing that lines up the launcher at the fixed autonomous shot position.
-        // This compensates camera/launcher mounting at THAT distance, not at arbitrary distances.
+        // TUNE: horizontal Limelight angle at which the launcher—not necessarily the camera—is
+        // aimed at the Hive opening. Zero means the opening should appear on the camera crosshair;
+        // use a nonzero value when the camera is mounted sideways from the launcher's firing line.
+        // Positive is to the camera's right and negative is to its left. Calibrate at the actual
+        // autonomous shooting pose because camera/launcher separation changes the angle by distance.
         public static double HIVE_AIM_BEARING_DEGREES = 0;
-        // TUNE: maximum horizontal aiming error allowed before autonomous can feed pollen.
+        // TUNE: allowed difference between the measured bearing above and the calibrated bearing.
+        // At 2 degrees, a target from -2 to +2 degrees is acceptable when the calibration is zero.
         public static double HIVE_AIM_TOLERANCE_DEGREES = 2;
         // TUNE: positive turn gain; code converts camera-right error to Pedro's clockwise turn.
         // Verify wheel directions with an unloaded robot before increasing this gain.
         public static double HIVE_AIM_TURN_POWER_PER_DEGREE = .018;
-        // TUNE: maximum autonomous turn power while correcting Hive aim.
-        public static double HIVE_AIM_MAX_TURN_POWER = .25;
-        // TUNE: seconds of fresh, aligned readings with little opening/rotation movement before feed.
-        // This is a motion estimate, not proof that the Hive damper has reached its physical stop.
-        public static double HIVE_AIM_HOLD_SECONDS = .35;
+        // TUNE: maximum autonomous turn power while correcting Hive aim. The default 1.0 does not
+        // restrict normal motor power; lower it only if robot testing shows overshoot or lost tags.
+        public static double HIVE_AIM_MAX_TURN_POWER = 1;
         // TUNE: maximum camera-result age, including processing latency, in milliseconds.
         public static double MAX_FRAME_AGE_MS = 150;
-        // TUNE: allowed opening movement from the FIRST reading of a stable interval, in inches.
-        public static double HIVE_MAX_POSITION_DRIFT_IN = .75;
-        // TUNE: allowed 3D rotation change from the first reading, including tipping, in degrees.
-        public static double HIVE_MAX_ROTATION_DRIFT_DEGREES = 3;
+        // TUNE: maximum disagreement between opening estimates from tags in the same image.
+        public static double HIVE_MAX_POSITION_DIFFERENCE_IN = .75;
+        // TUNE: maximum rotation disagreement between tag estimates in the same image.
+        public static double HIVE_MAX_ROTATION_DIFFERENCE_DEGREES = 3;
         // TUNE: reject tag orientations within this many degrees of appearing sideways/edge-on.
         // This is a confidence margin for an upright-mounted camera, not a Hive mechanical angle.
         public static double HIVE_UPRIGHT_MARGIN_DEGREES = 15;
-        // TUNE: extra wait after a feed finishes, allowing ball flight and the start of a Hive tip.
-        // Measure this on the robot; the fresh-pose stability check runs after this wait as well.
-        public static double HIVE_POST_FEED_WAIT_SECONDS = .6;
+        // TUNE: optional pause after a feed finishes. Zero adds no unproven delay; increase it only
+        // if physical testing shows that an immediate next shot causes a repeatable problem.
+        public static double HIVE_POST_FEED_WAIT_SECONDS = 0;
     }
 
     public static final class Auto {

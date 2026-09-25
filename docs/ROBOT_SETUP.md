@@ -8,16 +8,21 @@ calibrated or field-tested on the physical robot. Treat every value marked
 
 | Name | Expected device |
 | --- | --- |
-| `front_left_drive` | mecanum drive motor |
-| `front_right_drive` | mecanum drive motor |
-| `back_left_drive` | mecanum drive motor |
-| `back_right_drive` | mecanum drive motor |
+| `front_left_motor` | mecanum drive motor |
+| `front_right_motor` | mecanum drive motor |
+| `back_left_motor` | mecanum drive motor |
+| `back_right_motor` | mecanum drive motor |
 | `pinpoint` | goBILDA Pinpoint odometry computer |
 | `intake` | single intake motor |
 | `flywheel_left`, `flywheel_right` | encoder-equipped launcher motors |
 | `feeder` | launcher feeder motor |
 | `hood` | launcher angle servo |
-| `limelight` | Limelight 3A running pollen and 36h11 AprilTag pipelines |
+| `limelight` | required launcher-aligned Limelight 3A running the Hive AprilTag pipeline |
+| `pollen_limelight` | optional second Limelight 3A running the pollen detector |
+
+The original `limelight` name is deliberately retained for the required Hive camera. If
+`pollen_limelight` is absent, pollen detection reports unavailable while Hive targeting continues
+normally. A missing `limelight` is a configuration error because safe autonomous aiming requires it.
 
 No beam-break or magazine sensor is documented. Manual inventory correction and
 automatic intake lockout remain disabled, so CAD must prevent control of a fifth
@@ -37,8 +42,9 @@ Auto still tracks the four assumed preloads and cannot feed a fifth one.
 4. At low power, verify positive drive, strafe, and turn directions. Correct
    motor directions in `pedroPathing/Constants.java`, never by swapping gamepad
    signs until the wheel convention is correct.
-5. Configure Limelight pipeline 0 for the `yellow_pollen` detector and pipeline
-   1 for 36h11 AprilTags, **82.55 mm (3.25 inch)** marker size, and **Full 3D**.
+5. On `pollen_limelight`, configure pipeline 0 for the `yellow_pollen` detector. On the
+   required `limelight`, configure pipeline 1 for 36h11 AprilTags, **82.55 mm (3.25 inch)**
+   marker size, and **Full 3D**. The two cameras remain on their own pipelines continuously.
    Confirm the correct own-alliance Hive Cell tag ranges: red 30-37, blue 38-45.
    The pit diagnostic currently displays red targets; use blue Auto INIT for blue checks.
 6. Measure Pinpoint X/Y offsets, encoder directions, track width, wheel radius,
@@ -52,10 +58,10 @@ Auto still tracks the four assumed preloads and cannot feed a fifth one.
 
 ### Hive camera verification (unloaded robot first)
 
-The adapter uses Limelight's documented optical coordinates (camera X right,
+`HiveTagGeometry` uses Limelight's documented optical coordinates (camera X right,
 Y down, Z forward) and its per-tag camera-space poses, not VisionPortal's
 `ftcPose.roll` or a static-field `botpose`. It is written against the documented
-2026 coordinate convention; re-check this adapter before installing firmware
+2026 coordinate convention; re-check this calculation before installing firmware
 that changes those axes. Mount the camera upright (not sideways/inverted),
 looking along the launch direction. A pitched-up camera is allowed, but the
 horizontal aim offset and shot table must be calibrated at the fixed Auto position.
@@ -64,20 +70,17 @@ horizontal aim offset and shot table must be calibrated at the fixed Auto positi
   including when its tags and the upward Cell's tags are visible together.
 - Hide individual tags. The estimated opening bearing should stay consistent;
   disagreeing per-tag poses deliberately produce no target.
-- Turn/tilt the Hive while keeping it horizontally centered. Auto must restart
-  qualification when the opening position or 3D rotation changes appreciably.
-- Disconnect the camera, freeze its input, or select the wrong pipeline. No new
+- Disconnect the Hive camera, freeze its input, or select the wrong pipeline. No new
   automatic feed should start; a pulse already started still finishes normally.
 - Verify a target to the right makes the unloaded robot turn right. Do not
   compensate incorrect drive motor directions by reversing the aim gain.
-- Tune pose-drift limits, stable-observation time, and post-feed delay using
-  camera observations of real ball flight and Hive tips. A motion estimate is
-  not physical confirmation that the damper reached its stop.
+- Leave the post-feed delay at zero unless repeated robot testing shows a reason to wait.
+  The code does not claim to detect when the Hive has stopped moving.
 
 Opening geometry comes from SDK 12's `AprilTagGameDatabase.getBioBuzzCluster`:
 member X offsets -6.50, -2.75, 2.75, 6.50 inches; Y 7.1874; Z -5.622.
 Each tag is transformed to the same opening point before detections are combined.
-Java tests cover synthetic geometry and firing qualification; they do not validate
+Java tests cover synthetic geometry; they do not validate
 the installed camera firmware, mount, tag-size setting, or actual ballistic accuracy.
 
 ## Competition controls
@@ -93,7 +96,7 @@ the installed camera firmware, mount, tag-size setting, or actual ballistic accu
 - `A` or `X`: run intake inward
 - `Y`: reverse intake
 - `B` or no intake button: stop intake
-- Hold right bumper: select Hive tags and keep the shooter spinning
+- Hold right bumper: keep the shooter spinning (Hive vision already runs continuously)
 - Right trigger: request one feed pulse when the flywheels are ready; release
   and press again if the previous request was made before spin-up completed
 

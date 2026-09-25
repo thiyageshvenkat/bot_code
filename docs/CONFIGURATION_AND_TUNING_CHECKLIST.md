@@ -19,17 +19,18 @@ The following names must match exactly. Change the REV configuration or the corr
 
 | Checked | Configuration name | Expected device | Code constant |
 | --- | --- | --- | --- |
-| [ ] | `front_left_drive` | front-left mecanum motor | `Drive.FRONT_LEFT` |
-| [ ] | `front_right_drive` | front-right mecanum motor | `Drive.FRONT_RIGHT` |
-| [ ] | `back_left_drive` | back-left mecanum motor | `Drive.BACK_LEFT` |
-| [ ] | `back_right_drive` | back-right mecanum motor | `Drive.BACK_RIGHT` |
+| [ ] | `front_left_motor` | front-left mecanum motor | `Drive.FRONT_LEFT` |
+| [ ] | `front_right_motor` | front-right mecanum motor | `Drive.FRONT_RIGHT` |
+| [ ] | `back_left_motor` | back-left mecanum motor | `Drive.BACK_LEFT` |
+| [ ] | `back_right_motor` | back-right mecanum motor | `Drive.BACK_RIGHT` |
 | [ ] | `pinpoint` | goBILDA Pinpoint computer | `Drive.PINPOINT` |
 | [ ] | `intake` | intake motor | `Intake.MOTOR` |
 | [ ] | `flywheel_left` | left motor on shared flywheel | `Shooter.LEFT_FLYWHEEL` |
 | [ ] | `flywheel_right` | right motor on shared flywheel | `Shooter.RIGHT_FLYWHEEL` |
 | [ ] | `feeder` | shooter feeder motor | `Shooter.FEEDER` |
 | [ ] | `hood` | shooter hood servo | `Shooter.HOOD` |
-| [ ] | `limelight` | Limelight 3A | `Vision.LIMELIGHT` |
+| [ ] | `limelight` | Required launcher-aligned Limelight 3A | `Vision.HIVE_LIMELIGHT` |
+| [ ] | `pollen_limelight` | Optional pollen-detection Limelight 3A | `Vision.POLLEN_LIMELIGHT` |
 
 - [ ] Select the correct motor model for every motor in the REV configuration.
 - [ ] Confirm each encoder is connected to the port belonging to the motor whose speed it reports.
@@ -214,13 +215,12 @@ Tune with one pollen first, a guarded flywheel, and repeated battery-voltage con
 | [ ] | `HIVE_AIM_BEARING_DEGREES` | `0°` | Offset that aligns camera-derived opening with launcher at the fixed shot pose. | ______ |
 | [ ] | `HIVE_AIM_TOLERANCE_DEGREES` | `2°` | Largest measured aim error that still reliably enters the opening. | ______ |
 | [ ] | `HIVE_AIM_TURN_POWER_PER_DEGREE` | `0.018` | Increase until correction is responsive without oscillation. | ______ |
-| [ ] | `HIVE_AIM_MAX_TURN_POWER` | `0.25` | Limit motion so tags stay visible and the chassis does not overshoot. | ______ |
-| [ ] | `HIVE_AIM_HOLD_SECONDS` | `0.35 s` | Required duration of fresh aligned, low-motion observations. | ______ |
+| [ ] | `HIVE_AIM_MAX_TURN_POWER` | `1.0` | Full power is allowed by default; lower only if testing shows overshoot or lost tags. | ______ |
 | [ ] | `MAX_FRAME_AGE_MS` | `150 ms` | Must exceed normal measured processing/transport latency but reject freezes. | ______ |
-| [ ] | `HIVE_MAX_POSITION_DRIFT_IN` | `0.75 in` | Maximum opening movement during the stable interval. | ______ |
-| [ ] | `HIVE_MAX_ROTATION_DRIFT_DEGREES` | `3°` | Maximum rotation change during the stable interval. | ______ |
+| [ ] | `HIVE_MAX_POSITION_DIFFERENCE_IN` | `0.75 in` | Maximum disagreement between tags estimating the same opening in one image. | ______ |
+| [ ] | `HIVE_MAX_ROTATION_DIFFERENCE_DEGREES` | `3°` | Maximum rotation disagreement between tags in one image. | ______ |
 | [ ] | `HIVE_UPRIGHT_MARGIN_DEGREES` | `15°` | Reject ambiguous nearly sideways Cell orientations. | ______ |
-| [ ] | `HIVE_POST_FEED_WAIT_SECONDS` | `0.6 s` | Wait for ball flight and observable Hive-tip onset before requalification. | ______ |
+| [ ] | `HIVE_POST_FEED_WAIT_SECONDS` | `0 s` | Adds no delay by default; increase only after a repeatable problem is observed. | ______ |
 
 These checks estimate target orientation and motion. They do not physically prove that the Hive damper reached its stop or that the shot will land.
 

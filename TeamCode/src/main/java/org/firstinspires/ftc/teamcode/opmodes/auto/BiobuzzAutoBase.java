@@ -9,7 +9,6 @@ import org.firstinspires.ftc.teamcode.control.Superstructure;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.vision.BiobuzzVision;
-import org.firstinspires.ftc.teamcode.vision.HiveAim;
 
 /**
  * Shared implementation behind the registered red and blue BIOBUZZ autonomous OpModes.
@@ -29,8 +28,6 @@ abstract class BiobuzzAutoBase extends OpMode {
     private final AllianceColor alliance;
     // One match clock makes cutoff decisions independent of how long any path or shot takes.
     private final ElapsedTime matchTimer = new ElapsedTime();
-    // HiveAim remembers observations across loops; the OpMode still owns mechanism commands.
-    private final HiveAim hiveAim = new HiveAim();
     // Starts when a feed pulse actually finishes, so the delay includes ball flight/tip onset rather
     // than time spent pushing the pollen through the feeder.
     private final ElapsedTime sinceFeed = new ElapsedTime();
@@ -58,9 +55,9 @@ abstract class BiobuzzAutoBase extends OpMode {
         drivetrain.setPose(plan.start);
         superstructure = new Superstructure(hardwareMap, alliance);
         superstructure.seedPreloadPollen();
-        // Start switching early so INIT telemetry can expose camera/pipeline problems before PLAY.
-        // Tag orientation and opening geometry qualify a target; visibility alone does not.
-        superstructure.vision.useHiveAprilTagPipeline();
+        // The required Hive camera starts its fixed AprilTag pipeline in BiobuzzVision's
+        // constructor. Tag orientation and opening geometry qualify a target; visibility alone does
+        // not. The optional pollen camera has no effect on this autonomous routine.
         telemetry.addData("BIOBUZZ auto", alliance);
         telemetry.addLine("Check start pose, visible own-Hive tags, and clear park route");
     }
@@ -70,8 +67,10 @@ abstract class BiobuzzAutoBase extends OpMode {
         // This is observation-only: the launcher and drivetrain stay stopped while the drive team
         // checks the chosen alliance, taped start pose, camera mount, and target visibility.
         telemetry.addData("Start pose", plan.start);
-        telemetry.addData("Limelight connected", superstructure.vision.isConnected());
-        BiobuzzVision.HiveTarget target = superstructure.vision.upwardHiveTarget(alliance);
+        telemetry.addData("Hive Limelight connected",
+                superstructure.vision.isHiveCameraConnected());
+        BiobuzzVision.HiveTarget target =
+                superstructure.vision.findUpwardCellOpening(alliance);
         if (target == null) {
             telemetry.addData("Hive opening estimate", "no usable fresh upright target");
         } else {
@@ -109,7 +108,7 @@ abstract class BiobuzzAutoBase extends OpMode {
                 // A completed pulse begins the deliberate delay before the next Hive qualification.
                 sinceFeed.reset();
             }
-            hiveTarget = superstructure.vision.upwardHiveTarget(alliance);
+            hiveTarget = superstructure.vision.findUpwardCellOpening(alliance);
             runState();
         }
         publishTelemetry();
@@ -157,7 +156,6 @@ abstract class BiobuzzAutoBase extends OpMode {
 
     /** Ends targeting, makes the launcher safe, and hands drivetrain ownership back to Pedro. */
     private void beginPark() {
-        hiveAim.reset();
         drivetrain.stop();
         superstructure.shooter.stop();
         transition(State.DRIVE_TO_PARK);
@@ -173,36 +171,39 @@ abstract class BiobuzzAutoBase extends OpMode {
         // Spinning up may happen while vision is still qualifying the opening, saving Auto time.
         superstructure.prepareHiveShot();
         if (superstructure.isBusy()) {
-            // Do not turn during a feed pulse, and start the next stability check after it finishes.
+            // Do not turn while pollen is being pushed into the flywheel.
             drivetrain.stop();
-            hiveAim.reset();
             return;
         }
 
         BiobuzzVision.HiveTarget target = hiveTarget;
         if (target == null) {
-            // Target loss stops turning and destroys previous stability credit. An old alignment
-            // must never authorize a feed when the camera starts reporting again.
+            // Without a fresh target, the robot does not know which way to turn or where it would
+            // shoot. BiobuzzVision has already rejected old and frozen camera images.
             drivetrain.stop();
-            hiveAim.reset();
             return;
         }
 
+        // target.bearingDegrees is where the estimated opening currently appears relative to the
+        // Hive camera: positive is camera-right and negative is camera-left. The configured bearing
+        // is where that opening SHOULD appear when the offset launcher is aimed correctly. Their
+        // difference is therefore the remaining horizontal turn error; zero means aligned.
         double bearingError = target.bearingDegrees
                 - RobotConfig.Vision.HIVE_AIM_BEARING_DEGREES;
         if (Math.abs(bearingError) > RobotConfig.Vision.HIVE_AIM_TOLERANCE_DEGREES) {
             // Only rotate here; the path already placed the robot at the calibrated shot distance.
-            drivetrain.turnInPlace(HiveAim.turnPower(target.bearingDegrees));
-            hiveAim.reset();
+            double turnPower = -bearingError * RobotConfig.Vision.HIVE_AIM_TURN_POWER_PER_DEGREE;
+            turnPower = Math.max(-RobotConfig.Vision.HIVE_AIM_MAX_TURN_POWER,
+                    Math.min(RobotConfig.Vision.HIVE_AIM_MAX_TURN_POWER, turnPower));
+            drivetrain.turnInPlace(turnPower);
             return;
         }
 
         drivetrain.stop();
         if (shotsRequested > 0
                 && sinceFeed.seconds() < RobotConfig.Vision.HIVE_POST_FEED_WAIT_SECONDS) {
-            // The next observation interval must begin after the previous pollen has had time to
-            // reach the Hive and reveal whether a tip started.
-            hiveAim.reset();
+            // This delay defaults to zero. Increase it only if robot testing shows that firing the
+            // next pollen immediately causes a real problem.
             return;
         }
         // Do not start a pulse that cannot finish before the user-selected shooting cutoff.
@@ -210,12 +211,10 @@ abstract class BiobuzzAutoBase extends OpMode {
                 >= RobotConfig.Auto.SHOOT_CUTOFF_SECONDS) {
             return;
         }
-        if (hiveAim.readyToFeed(target, matchTimer.seconds())
-                && superstructure.queueHiveShot(true)) {
+        if (superstructure.queueHiveShot(true)) {
             // This records an initiated pulse. Superstructure removes the inventory entry only when
             // the timed pulse finishes; without a beam sensor neither event proves a successful shot.
             shotsRequested++;
-            hiveAim.reset();
             sinceFeed.reset();
         }
     }
@@ -233,7 +232,8 @@ abstract class BiobuzzAutoBase extends OpMode {
         telemetry.addData("Pose", drivetrain.getPose());
         telemetry.addData("Inventory", superstructure.inventory.snapshot());
         telemetry.addData("Shots requested", shotsRequested);
-        telemetry.addData("Limelight connected", superstructure.vision.isConnected());
+        telemetry.addData("Hive Limelight connected",
+                superstructure.vision.isHiveCameraConnected());
         BiobuzzVision.HiveTarget target = hiveTarget;
         if (target == null) {
             telemetry.addData("Hive target", "no usable fresh upright target");

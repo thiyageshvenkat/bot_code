@@ -47,17 +47,16 @@ public final class BiobuzzPitDiagnostics extends OpMode {
             superstructure.intake.stop();
         }
         if (armed && gamepad2.right_bumper) {
-            superstructure.vision.useHiveAprilTagPipeline();
             superstructure.shooter.prepare(ShotModel.forDistance(30.0));
         } else {
-            superstructure.vision.usePollenPipeline();
             superstructure.shooter.stop();
         }
 
         drivetrain.periodic();
         superstructure.periodic();
-        BiobuzzVision.PollenTarget pollenTarget = superstructure.vision.bestPollen();
-        BiobuzzVision.HiveTarget hiveTarget = superstructure.vision.upwardHiveTarget(
+        BiobuzzVision.PollenTarget pollenTarget =
+                superstructure.vision.largestVisiblePollen();
+        BiobuzzVision.HiveTarget hiveTarget = superstructure.vision.findUpwardCellOpening(
                 AllianceColor.RED);
         telemetry.addData("ARMED", armed);
         telemetry.addData("Pose", drivetrain.getPose());
@@ -65,16 +64,19 @@ public final class BiobuzzPitDiagnostics extends OpMode {
         telemetry.addData("Flywheel motors", "left: %.0f RPM | right: %.0f RPM",
                 superstructure.shooter.getLeftSpeedRpm(),
                 superstructure.shooter.getRightSpeedRpm());
-        telemetry.addData("Limelight", superstructure.vision.isConnected());
-        telemetry.addData("Vision mode", superstructure.vision.getMode());
-        if (superstructure.vision.getMode() == BiobuzzVision.Mode.POLLEN) {
-            if (pollenTarget == null) {
-                telemetry.addData("Pollen", "not visible");
-            } else {
-                telemetry.addData("Pollen", "%.1f deg, %.2f%%",
-                        pollenTarget.bearingDegrees, pollenTarget.areaPercent);
-            }
-        } else if (hiveTarget == null) {
+        telemetry.addData("Hive Limelight connected",
+                superstructure.vision.isHiveCameraConnected());
+        telemetry.addData("Pollen Limelight installed/connected", "%s/%s",
+                superstructure.vision.isPollenCameraInstalled(),
+                superstructure.vision.isPollenCameraConnected());
+        if (pollenTarget == null) {
+            telemetry.addData("Pollen", superstructure.vision.isPollenCameraInstalled()
+                    ? "not visible" : "optional camera not installed");
+        } else {
+            telemetry.addData("Pollen", "%.1f deg, %.2f%%",
+                    pollenTarget.bearingDegrees, pollenTarget.areaPercent);
+        }
+        if (hiveTarget == null) {
             telemetry.addData("Red Hive opening estimate", "no usable fresh upright target");
         } else {
             telemetry.addData("Red Hive opening estimate", "%s | %.1f deg | %d tags",

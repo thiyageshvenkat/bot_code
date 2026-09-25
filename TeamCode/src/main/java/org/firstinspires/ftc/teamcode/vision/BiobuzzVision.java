@@ -1,39 +1,37 @@
 package org.firstinspires.ftc.teamcode.vision;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.LLResultTypes.DetectorResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes.FiducialResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-/** Uses the robot's one Limelight for pollen detection or upward-Hive-Cell targeting. */
+/**
+ * Provides the two vision results used by the robot.
+ *
+ * <p>The required launcher-aligned Limelight detects Hive AprilTags. The optional second Limelight
+ * detects pollen. If the pollen camera is not installed, Hive targeting continues normally.</p>
+ */
 public final class BiobuzzVision implements AutoCloseable {
-    public enum Mode {
-        POLLEN,
-        HIVE_APRIL_TAGS
-    }
-
+    /** Fixed field side occupied by the detected Cell; this does not change with robot alliance. */
     public enum HiveCell {
         AUDIENCE_SIDE,
-        NON_AUDIENCE_SIDE
+        OPPOSITE_AUDIENCE_SIDE
     }
 
+    /** Small set of pollen measurements needed by driver telemetry or future intake steering. */
     public static final class PollenTarget {
+        // Camera-measured angle from its crosshair to the pollen. Zero is centered in the image;
+        // positive means the pollen is to the camera's right and negative means it is to the left.
         public final double bearingDegrees;
+        // Percentage of the whole image covered by the box drawn around the pollen. The code picks
+        // the largest box as its target, but this number is not a physical distance.
         public final double areaPercent;
 
         private PollenTarget(double bearingDegrees, double areaPercent) {
@@ -42,304 +40,127 @@ public final class BiobuzzVision implements AutoCloseable {
         }
     }
 
+    /** AprilTag result reduced to the information used for Hive aiming and telemetry. */
     public static final class HiveTarget {
+        // Identifies the detected Cell using the official BIOBUZZ AprilTag IDs.
         public final HiveCell cell;
+        // Angle from the camera crosshair to the estimated Cell opening. Zero is centered;
+        // positive is camera-right and negative is camera-left.
         public final double bearingDegrees;
+        // Number of visible tags used to calculate the Cell opening.
         public final int visibleTagCount;
-        public final double frameTimestampMs;
-        // Camera-relative opening position and tag rotation are retained to detect Hive motion.
-        final double[] openingInches;
-        final double[] rotation;
 
-        HiveTarget(HiveCell cell, double[] openingInches, double[] rotation,
-                   int visibleTagCount, double frameTimestampMs) {
+        HiveTarget(HiveCell cell, double bearingDegrees, int visibleTagCount) {
             this.cell = cell;
-            this.bearingDegrees = Math.toDegrees(Math.atan2(openingInches[0], openingInches[2]));
+            this.bearingDegrees = bearingDegrees;
             this.visibleTagCount = visibleTagCount;
-            this.frameTimestampMs = frameTimestampMs;
-            this.openingInches = openingInches;
-            this.rotation = rotation;
-        }
-
-        /** Checks all three translation/rotation axes, not just horizontal image alignment. */
-        boolean movedFrom(HiveTarget reference) {
-            double squaredDistance = 0;
-            double rotationTrace = 0;
-            for (int i = 0; i < 3; i++) {
-                squaredDistance += Math.pow(openingInches[i] - reference.openingInches[i], 2);
-            }
-            for (int i = 0; i < 9; i++) {
-                rotationTrace += rotation[i] * reference.rotation[i];
-            }
-            double rotationChange = Math.toDegrees(Math.acos(
-                    Math.max(-1, Math.min(1, (rotationTrace - 1) / 2))));
-            return Math.sqrt(squaredDistance) > RobotConfig.Vision.HIVE_MAX_POSITION_DRIFT_IN
-                    || rotationChange > RobotConfig.Vision.HIVE_MAX_ROTATION_DRIFT_DEGREES;
         }
     }
 
-    private final Limelight3A limelight;
-    private Mode mode;
-    private final FrameGate frames = new FrameGate();
-    private boolean pipelineAccepted;
-    private long nextSwitchAttemptNanos;
-    // Camera HTTP requests can time out. Keep them off the motor-control loop so STOP and feeder
-    // timing stay responsive even when the camera is unplugged. Only this worker issues switches.
-    private final ExecutorService pipelineWorker = Executors.newSingleThreadExecutor();
-    private Future<Boolean> switchRequest;
-    private int switchingPipeline;
+    // Always present and permanently assigned to the 3D Hive AprilTag pipeline.
+    private final LimelightReader hiveCamera;
+    // Null when the optional second Limelight is absent from the active Robot Configuration.
+    private final LimelightReader pollenCamera;
 
     public BiobuzzVision(HardwareMap hardwareMap) {
-        limelight = hardwareMap.get(Limelight3A.class, RobotConfig.Vision.LIMELIGHT);
-        limelight.setPollRateHz(50);
-        usePollenPipeline();
-        limelight.start();
+        // A missing Hive camera stops initialization because autonomous needs it for aiming.
+        Limelight3A requiredHiveCamera = hardwareMap.get(
+                Limelight3A.class, RobotConfig.Vision.HIVE_LIMELIGHT);
+        hiveCamera = new LimelightReader(
+                requiredHiveCamera, RobotConfig.Vision.HIVE_APRILTAG_PIPELINE);
+
+        // The robot continues without pollen detection when the second Limelight is not installed.
+        Limelight3A optionalPollenCamera = hardwareMap.tryGet(
+                Limelight3A.class, RobotConfig.Vision.POLLEN_LIMELIGHT);
+        pollenCamera = optionalPollenCamera == null ? null
+                : new LimelightReader(optionalPollenCamera, RobotConfig.Vision.POLLEN_PIPELINE);
     }
 
-    /** Selects the neural detector used while looking for loose pollen. */
-    public void usePollenPipeline() {
-        selectMode(Mode.POLLEN, RobotConfig.Vision.POLLEN_PIPELINE);
-    }
-
-    /** Requests the 3D tag pipeline; results remain unusable until the camera confirms the switch. */
-    public void useHiveAprilTagPipeline() {
-        selectMode(Mode.HIVE_APRIL_TAGS, RobotConfig.Vision.HIVE_APRILTAG_PIPELINE);
-    }
-
-    public Mode getMode() {
-        return mode;
-    }
-
-    public PollenTarget bestPollen() {
-        if (mode != Mode.POLLEN) {
+    /**
+     * Returns the pollen detection with the largest box in the newest usable image. Detections with
+     * the wrong model label or confidence below MIN_CONFIDENCE are ignored. Box size helps choose
+     * between visible pollen, but it is not a physical-distance measurement.
+     */
+    public PollenTarget largestVisiblePollen() {
+        if (pollenCamera == null) {
             return null;
         }
-
-        LLResult result = validLatestResult();
+        LLResult result = pollenCamera.getLatestUsableResult();
         if (result == null) {
             return null;
         }
 
-        PollenTarget best = null;
-        for (LLResultTypes.DetectorResult detection : result.getDetectorResults()) {
-            boolean correctClass = RobotConfig.Vision.POLLEN_CLASS.equals(
-                    detection.getClassName());
-            boolean confident = detection.getConfidence() >= RobotConfig.Vision.MIN_CONFIDENCE;
-            if (!correctClass || !confident) {
+        PollenTarget largestPollen = null;
+        for (DetectorResult detection : result.getDetectorResults()) {
+            // The neural model may contain several labels and low-confidence guesses. Only the
+            // configured pollen label above the configured confidence is exposed to robot code.
+            boolean isPollen = RobotConfig.Vision.POLLEN_CLASS.equals(detection.getClassName());
+            boolean hasEnoughConfidence =
+                    detection.getConfidence() >= RobotConfig.Vision.MIN_CONFIDENCE;
+            if (!isPollen || !hasEnoughConfidence) {
                 continue;
             }
 
-            PollenTarget candidate = new PollenTarget(
+            PollenTarget pollen = new PollenTarget(
                     detection.getTargetXDegrees(), detection.getTargetArea());
-            if (best == null || candidate.areaPercent > best.areaPercent) {
-                best = candidate;
+            if (largestPollen == null || pollen.areaPercent > largestPollen.areaPercent) {
+                largestPollen = pollen;
             }
         }
-        return best;
+        return largestPollen;
     }
 
     /**
-     * Estimates the opening of an upright own-alliance Cell. A downward Cell may also be visible;
-     * its orientation, not its presence, excludes it. This does NOT establish that the Hive has
-     * stopped moving: HiveAim checks successive poses before autonomous may feed.
+     * Uses Hive AprilTags to locate our alliance's upward-facing Cell opening. Opponent tags and
+     * tags on the downward-facing Cell are ignored. When several tags are visible, their separate
+     * opening estimates must be close enough to combine.
+     *
+     * @return the estimated Cell opening, or null when no current usable estimate exists
      */
-    public HiveTarget upwardHiveTarget(AllianceColor alliance) {
-        if (mode != Mode.HIVE_APRIL_TAGS || alliance == null) {
+    public HiveTarget findUpwardCellOpening(AllianceColor alliance) {
+        if (alliance == null) {
             return null;
         }
-
-        LLResult result = validLatestResult();
+        LLResult result = hiveCamera.getLatestUsableResult();
         if (result == null) {
             return null;
         }
 
-        List<HiveTarget> candidates = new ArrayList<>();
-        for (LLResultTypes.FiducialResult tag : result.getFiducialResults()) {
-            HiveTarget candidate = targetForTag(alliance, tag.getFiducialId(),
-                    tag.getTargetPoseCameraSpace(), result.getTimestamp());
-            if (candidate != null) {
-                candidates.add(candidate);
+        List<HiveTagGeometry.TagOpeningEstimate> tagEstimates = new ArrayList<>();
+        for (FiducialResult tag : result.getFiducialResults()) {
+            // A tag marks part of a Cell, not the opening itself. Convert every visible tag to the
+            // same opening position before deciding whether their measurements agree.
+            HiveTagGeometry.TagOpeningEstimate estimate =
+                    HiveTagGeometry.estimateCellOpeningFromTag(
+                            alliance, tag.getFiducialId(), tag.getTargetPoseCameraSpace());
+            if (estimate != null) {
+                tagEstimates.add(estimate);
             }
         }
-        return selectConsistentTarget(candidates);
+        return HiveTagGeometry.combineMatchingTagEstimates(tagEstimates);
     }
 
-    /**
-     * Converts each tag pose into the SAME opening reference before combining detections.
-     * Offsets come from SDK 12's AprilTagGameDatabase.getBioBuzzCluster (inches), not tuning.
-     * Limelight's documented optical axes are right/down/forward. Its Euler angles are NOT the
-     * FTC VisionPortal ftcPose angles. This assumes an upright camera facing the launcher direction;
-     * verify both Hive positions with no pollen before enabling live shots (see ROBOT_SETUP).
-     */
-    static HiveTarget targetForTag(AllianceColor alliance, int tagId, Pose3D pose, double timestamp) {
-        HiveCell cell = cellForTag(alliance, tagId);
-        if (cell == null || pose == null || !Double.isFinite(timestamp) || timestamp <= 0) {
-            return null;
-        }
-        Position position = pose.getPosition().toUnit(DistanceUnit.INCH);
-        YawPitchRollAngles angles = pose.getOrientation();
-        double roll = angles.getRoll(AngleUnit.RADIANS);
-        double pitch = angles.getPitch(AngleUnit.RADIANS);
-        double yaw = angles.getYaw(AngleUnit.RADIANS);
-        if (!Double.isFinite(position.x) || !Double.isFinite(position.y)
-                || !Double.isFinite(position.z) || position.z <= 0
-                || !Double.isFinite(roll) || !Double.isFinite(pitch) || !Double.isFinite(yaw)) {
-            return null;
-        }
-        // Rz(yaw) * Ry(pitch) * Rx(roll): tag-local vectors expressed in camera coordinates.
-        double cr = Math.cos(roll), sr = Math.sin(roll);
-        double cp = Math.cos(pitch), sp = Math.sin(pitch);
-        double cy = Math.cos(yaw), sy = Math.sin(yaw);
-        double[] rotation = {cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr,
-                sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr,
-                -sp, cp * sr, cp * cr};
-        // The tag's down axis must project down in the upright camera. A small margin rejects
-        // near-edge-on/sideways poses instead of interpreting them as confidently upright.
-        if (rotation[4] <= Math.sin(Math.toRadians(RobotConfig.Vision.HIVE_UPRIGHT_MARGIN_DEGREES))) {
-            return null;
-        }
-        double[] tagX = {-6.50, -2.75, 2.75, 6.50};
-        double[] tagOffset = {tagX[(tagId - 30) % 4], 7.1874, -5.622};
-        double[] opening = {position.x, position.y, position.z};
-        for (int row = 0; row < 3; row++) {
-            for (int column = 0; column < 3; column++) {
-                opening[row] -= rotation[row * 3 + column] * tagOffset[column];
-            }
-        }
-        if (opening[2] <= 0) {
-            return null;
-        }
-        return new HiveTarget(cell, opening, rotation, 1, timestamp);
+    /** Reports the required camera connection separately from whether it currently sees a tag. */
+    public boolean isHiveCameraConnected() {
+        return hiveCamera.isConnected();
     }
 
-    static HiveTarget selectConsistentTarget(List<HiveTarget> candidates) {
-        if (candidates.isEmpty()) {
-            return null;
-        }
-        HiveTarget reference = candidates.get(0);
-        double[] opening = new double[3];
-        for (HiveTarget candidate : candidates) {
-            if (candidate.cell != reference.cell || candidate.movedFrom(reference)) {
-                // Contradictory cell/pose estimates must not authorize a feed.
-                return null;
-            }
-            for (int i = 0; i < 3; i++) {
-                opening[i] += candidate.openingInches[i] / candidates.size();
-            }
-        }
-        return new HiveTarget(reference.cell, opening, reference.rotation,
-                candidates.size(), reference.frameTimestampMs);
+    /** Distinguishes an intentionally absent pollen camera from a disconnected installed camera. */
+    public boolean isPollenCameraInstalled() {
+        return pollenCamera != null;
     }
 
-    /** Maps the official BIOBUZZ tag ranges to the Cell carrying each cluster. */
-    static HiveCell cellForTag(AllianceColor alliance, int tagId) {
-        if (alliance == AllianceColor.RED) {
-            if (tagId >= 30 && tagId <= 33) {
-                return HiveCell.NON_AUDIENCE_SIDE;
-            }
-            if (tagId >= 34 && tagId <= 37) {
-                return HiveCell.AUDIENCE_SIDE;
-            }
-        } else if (alliance == AllianceColor.BLUE) {
-            if (tagId >= 38 && tagId <= 41) {
-                return HiveCell.AUDIENCE_SIDE;
-            }
-            if (tagId >= 42 && tagId <= 45) {
-                return HiveCell.NON_AUDIENCE_SIDE;
-            }
-        }
-        return null;
-    }
-
-    public boolean isConnected() {
-        return limelight.isConnected();
+    /** True only when the optional pollen camera exists in the configuration and is connected. */
+    public boolean isPollenCameraConnected() {
+        return pollenCamera != null && pollenCamera.isConnected();
     }
 
     @Override
     public void close() {
-        pipelineWorker.shutdownNow();
-        limelight.stop();
-    }
-
-    private void selectMode(Mode nextMode, int pipelineIndex) {
-        if (mode != nextMode || frames.pipelineIndex != pipelineIndex) {
-            LLResult previous = limelight.getLatestResult();
-            double previousTimestamp = Double.NaN;
-            if (previous != null) {
-                previousTimestamp = previous.getTimestamp();
-            }
-            frames.switchTo(pipelineIndex, previousTimestamp);
-            mode = nextMode;
-            pipelineAccepted = false;
-            nextSwitchAttemptNanos = 0;
-        }
-        long now = System.nanoTime();
-        if (switchRequest != null && switchRequest.isDone()) {
-            try {
-                pipelineAccepted = switchRequest.get() && switchingPipeline == pipelineIndex;
-            } catch (ExecutionException e) {
-                pipelineAccepted = false;
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                pipelineAccepted = false;
-            }
-            switchRequest = null;
-        }
-        if (!pipelineAccepted && switchRequest == null && now >= nextSwitchAttemptNanos) {
-            switchingPipeline = pipelineIndex;
-            switchRequest = pipelineWorker.submit(() -> limelight.pipelineSwitch(pipelineIndex));
-            // Retry transient failures, without sending a new HTTP request every control loop.
-            nextSwitchAttemptNanos = now + 500_000_000L;
-        }
-    }
-
-    private LLResult validLatestResult() {
-        // Auto requests its mode only at INIT, so reads must also service a failed switch retry.
-        int pipeline = RobotConfig.Vision.POLLEN_PIPELINE;
-        if (mode == Mode.HIVE_APRIL_TAGS) {
-            pipeline = RobotConfig.Vision.HIVE_APRILTAG_PIPELINE;
-        }
-        selectMode(mode, pipeline);
-        LLResult result = limelight.getLatestResult();
-        if (!pipelineAccepted || !limelight.isConnected() || result == null) {
-            return null;
-        }
-        if (result.getPipelineIndex() != pipeline && System.nanoTime() >= nextSwitchAttemptNanos) {
-            pipelineAccepted = false;
-        }
-        double ageMs = result.getStaleness() + result.getCaptureLatency() + result.getTargetingLatency();
-        if (!frames.accepts(result.getPipelineIndex(), result.getTimestamp(), ageMs, System.nanoTime())
-                || !result.isValid()) {
-            return null;
-        }
-        return result;
-    }
-
-    /** SDK polling can repeatedly retrieve one frozen camera frame; receipt age alone is insufficient. */
-    static final class FrameGate {
-        private int pipelineIndex = -1;
-        private double switchTimestamp;
-        private double lastTimestamp = Double.NaN;
-        private long lastNewFrameNanos;
-
-        void switchTo(int pipeline, double previousTimestamp) {
-            pipelineIndex = pipeline;
-            switchTimestamp = previousTimestamp;
-            lastTimestamp = Double.NaN;
-        }
-
-        boolean accepts(int pipeline, double timestamp, double ageMs, long nowNanos) {
-            if (pipeline != pipelineIndex || !Double.isFinite(timestamp) || timestamp <= 0
-                    || timestamp == switchTimestamp || !Double.isFinite(ageMs) || ageMs < 0
-                    || ageMs > RobotConfig.Vision.MAX_FRAME_AGE_MS) {
-                return false;
-            }
-            if (timestamp != lastTimestamp) {
-                lastTimestamp = timestamp;
-                lastNewFrameNanos = nowNanos;
-            }
-            // Conservatively include time spent reusing a frame as well as reported latency/age.
-            return ageMs + (nowNanos - lastNewFrameNanos) / 1e6 <= RobotConfig.Vision.MAX_FRAME_AGE_MS;
+        // FTC can stop an OpMode at any time; stop both cameras and their pipeline request threads.
+        hiveCamera.close();
+        if (pollenCamera != null) {
+            pollenCamera.close();
         }
     }
 }
