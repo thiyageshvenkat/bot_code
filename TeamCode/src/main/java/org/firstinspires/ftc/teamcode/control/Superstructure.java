@@ -66,11 +66,12 @@ public final class Superstructure implements AutoCloseable {
 
     /**
      * Must run once per OpMode loop so the timed feeder state can advance. Inventory is decremented
-     * after feeding completes—not when requested—so a rejected request cannot lose an entry.
+     * after the feed pulse completes—not when requested—so a rejected request cannot lose an entry.
+     * Without a feeder sensor, this remains an assumption rather than proof that pollen was fired.
      */
     public void periodic() {
         shooter.periodic();
-        if (shooter.consumeShotCompleted()) {
+        if (shooter.consumeFeedPulseCompleted()) {
             inventory.releaseNext();
         }
     }

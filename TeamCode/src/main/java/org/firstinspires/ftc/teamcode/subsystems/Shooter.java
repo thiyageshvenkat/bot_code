@@ -12,19 +12,36 @@ import com.seattlesolvers.solverslib.command.SubsystemBase;
 import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.control.ShotModel;
 
-/** Two-motor, shared-flywheel launcher with speed qualification and timed feeding. */
+/**
+ * Controls the two motors coupled to one flywheel, the feeder motor, and the adjustable hood.
+ * Encoder feedback can prove that both flywheel motors reached speed. Because there is currently
+ * no sensor at the feeder, completing a feed cycle only means that its timed motor pulse ended;
+ * the CAD must reliably place the next pollen in front of the feeder.
+ */
 public final class Shooter extends SubsystemBase {
-    public enum State { STOPPED, SPINNING, READY, FEEDING }
+    // Normal progression is STOPPED -> SPINNING -> READY -> FEEDING -> SPINNING.
+    public enum State {
+        STOPPED,
+        SPINNING,
+        READY,
+        FEEDING
+    }
 
     private final DcMotorEx leftFlywheel;
     private final DcMotorEx rightFlywheel;
     private final DcMotorEx feeder;
     private final Servo hood;
+
+    // While spinning, this measures uninterrupted time at the requested speed. While feeding, it
+    // measures the feeder pulse. A single timer is safe because those states cannot occur together.
     private final ElapsedTime stateTimer = new ElapsedTime();
 
     private State state = State.STOPPED;
+    // The FTC motor controller accepts encoder ticks per second, even though configuration and
+    // telemetry use RPM because RPM is easier for the team to reason about while tuning.
     private double targetTicksPerSecond;
-    private boolean shotCompleted;
+    // This is not sensor confirmation of a launched pollen; it records only a completed feed pulse.
+    private boolean feedPulseCompleted;
 
     public Shooter(HardwareMap hardwareMap) {
         leftFlywheel = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.LEFT_FLYWHEEL);
@@ -33,24 +50,25 @@ public final class Shooter extends SubsystemBase {
         hood = hardwareMap.get(Servo.class, RobotConfig.Shooter.HOOD);
 
         configureFlywheel(leftFlywheel, DcMotorSimple.Direction.FORWARD);
-        DcMotorSimple.Direction rightFlywheelDirection = DcMotorSimple.Direction.FORWARD;
-        if (RobotConfig.Shooter.RIGHT_FLYWHEEL_REVERSED) {
-            rightFlywheelDirection = DcMotorSimple.Direction.REVERSE;
-        }
-        configureFlywheel(rightFlywheel, rightFlywheelDirection);
-        feeder.setDirection(RobotConfig.Shooter.FEEDER_REVERSED
-                ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+        configureFlywheel(rightFlywheel,
+                directionFromReversedSetting(RobotConfig.Shooter.RIGHT_FLYWHEEL_REVERSED));
+        feeder.setDirection(directionFromReversedSetting(RobotConfig.Shooter.FEEDER_REVERSED));
         feeder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         feeder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         stop();
     }
 
+    /** Applies a calculated RPM and hood position, then begins or maintains flywheel spin-up. */
     public void prepare(ShotModel solution) {
         if (solution == null) {
             return;
         }
+
+        // Never send a negative launch speed, and never send the servo outside its valid range.
         targetTicksPerSecond = rpmToTicksPerSecond(Math.max(0.0, solution.shooterTargetRpm));
         hood.setPosition(Range.clip(solution.hoodPosition, 0.0, 1.0));
+
+        // Both motors drive the same physical flywheel and therefore receive the same speed target.
         leftFlywheel.setVelocity(targetTicksPerSecond);
         rightFlywheel.setVelocity(targetTicksPerSecond);
         if (state == State.STOPPED) {
@@ -59,6 +77,11 @@ public final class Shooter extends SubsystemBase {
         }
     }
 
+    /**
+     * Starts one timed feeder pulse only after both flywheel motors have qualified as ready.
+     *
+     * @return true when the request started a pulse; false when the shooter was not ready
+     */
     public boolean requestFeed() {
         if (state != State.READY) {
             return false;
@@ -69,6 +92,7 @@ public final class Shooter extends SubsystemBase {
         return true;
     }
 
+    /** Immediately makes the launcher safe and returns the hood to its stowed position. */
     public void stop() {
         leftFlywheel.setPower(0);
         rightFlywheel.setPower(0);
@@ -78,14 +102,29 @@ public final class Shooter extends SubsystemBase {
         state = State.STOPPED;
     }
 
-    public State getState() { return state; }
-    public double getTargetRpm() { return ticksPerSecondToRpm(targetTicksPerSecond); }
-    public double getLeftSpeedRpm() { return ticksPerSecondToRpm(leftFlywheel.getVelocity()); }
-    public double getRightSpeedRpm() { return ticksPerSecondToRpm(rightFlywheel.getVelocity()); }
+    public State getState() {
+        return state;
+    }
 
-    public boolean consumeShotCompleted() {
-        boolean completed = shotCompleted;
-        shotCompleted = false;
+    public double getTargetRpm() {
+        return ticksPerSecondToRpm(targetTicksPerSecond);
+    }
+
+    public double getLeftSpeedRpm() {
+        return ticksPerSecondToRpm(leftFlywheel.getVelocity());
+    }
+
+    public double getRightSpeedRpm() {
+        return ticksPerSecondToRpm(rightFlywheel.getVelocity());
+    }
+
+    /**
+     * Reports each completed feeder pulse once so inventory can remove one assumed pollen.
+     * This does not confirm that a pollen physically moved through the launcher.
+     */
+    public boolean consumeFeedPulseCompleted() {
+        boolean completed = feedPulseCompleted;
+        feedPulseCompleted = false;
         return completed;
     }
 
@@ -95,35 +134,53 @@ public final class Shooter extends SubsystemBase {
             return;
         }
 
-        // Requiring both motors prevents feeding when one motor is disconnected, stalled, or slow.
-        boolean atSpeed = Math.abs(leftFlywheel.getVelocity() - targetTicksPerSecond)
-                <= rpmToTicksPerSecond(RobotConfig.Shooter.SHOOTER_MAX_READY_ERROR_RPM)
-                && Math.abs(rightFlywheel.getVelocity() - targetTicksPerSecond)
-                <= rpmToTicksPerSecond(RobotConfig.Shooter.SHOOTER_MAX_READY_ERROR_RPM);
+        boolean atSpeed = bothFlywheelMotorsAreAtTargetSpeed();
 
         if (state == State.SPINNING) {
+            // READY requires continuous time within tolerance, not one lucky encoder reading.
             if (!atSpeed) {
                 stateTimer.reset();
             } else if (stateTimer.seconds() >= RobotConfig.Shooter.READY_HOLD_SECONDS) {
                 state = State.READY;
             }
         } else if (state == State.READY && !atSpeed) {
+            // Revoke readiness if either motor slows before the feeder is requested.
             state = State.SPINNING;
             stateTimer.reset();
         } else if (state == State.FEEDING
                 && stateTimer.seconds() >= RobotConfig.Shooter.FEED_SECONDS) {
+            // With no feeder sensor, elapsed time is the only available completion signal.
             feeder.setPower(0);
-            shotCompleted = true;
+            feedPulseCompleted = true;
             state = State.SPINNING;
             stateTimer.reset();
         }
     }
 
+    private boolean bothFlywheelMotorsAreAtTargetSpeed() {
+        double allowedError = rpmToTicksPerSecond(
+                RobotConfig.Shooter.SHOOTER_MAX_READY_ERROR_RPM);
+        double leftError = Math.abs(leftFlywheel.getVelocity() - targetTicksPerSecond);
+        double rightError = Math.abs(rightFlywheel.getVelocity() - targetTicksPerSecond);
+
+        // Requiring both protects against feeding with a disconnected, stalled, or slow motor.
+        return leftError <= allowedError && rightError <= allowedError;
+    }
+
     private static void configureFlywheel(DcMotorEx motor, DcMotorSimple.Direction direction) {
         motor.setPower(0);
         motor.setDirection(direction);
+        // RUN_USING_ENCODER lets setVelocity use the motor controller's closed-loop regulation.
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // The high-speed flywheel should coast down instead of electrically braking to a stop.
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+    }
+
+    private static DcMotorSimple.Direction directionFromReversedSetting(boolean reversed) {
+        if (reversed) {
+            return DcMotorSimple.Direction.REVERSE;
+        }
+        return DcMotorSimple.Direction.FORWARD;
     }
 
     private static double rpmToTicksPerSecond(double rpm) {
