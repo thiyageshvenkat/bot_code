@@ -16,8 +16,8 @@ import org.firstinspires.ftc.teamcode.vision.BiobuzzVision;
  * mechanisms, such as allowing a feed only when both inventory and shooter state permit it.
  */
 public final class Superstructure implements AutoCloseable {
-    // Feeding and the optional intake-capacity lockout rely on this record. Until sensors update it,
-    // it is only an assumption and must not be treated as proof of what is physically in the robot.
+    // Auto preload counting and the optional intake-capacity lockout rely on this record. Sensorless
+    // TeleOp bypasses the count for feeding; it is not proof of what is physically in the robot.
     public final ElementInventory inventory;
     public final Intake intake;
     public final Shooter shooter;
@@ -56,12 +56,14 @@ public final class Superstructure implements AutoCloseable {
     }
 
     /**
-     * Requests one feeder cycle only when the software inventory is nonempty and the shooter is
-     * ready. Checking both avoids deliberately dry-feeding and avoids pushing an element into a
-     * flywheel that has not reached speed.
+     * Requests a feeder cycle after the flywheel reaches speed. Autonomous requires a tracked
+     * preload; sensorless TeleOp deliberately does not, because its intake cannot update the count.
+     * In that mode the operator/CAD, not this software count, must establish whether pollen is loaded.
+     *
+     * @param requireTrackedElement true for autonomous or when inventory is actually maintained
      */
-    public boolean queueHiveShot() {
-        return inventory.peekNext() != null && shooter.requestFeed();
+    public boolean queueHiveShot(boolean requireTrackedElement) {
+        return inventory.permitsFeed(requireTrackedElement) && shooter.requestFeed();
     }
 
     /**

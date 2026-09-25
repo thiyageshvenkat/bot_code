@@ -66,7 +66,8 @@ public final class Shooter extends SubsystemBase {
         feeder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         feeder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // Initialization must leave every actuator off until TeleOp or autonomous requests a shot.
+        // Initialization stops the motors and stows the hood. Stowing can move the servo, so do not
+        // INIT TeleOp during the motionless Auto/TeleOp transition if the hood is not already stowed.
         stop();
     }
 
@@ -95,7 +96,14 @@ public final class Shooter extends SubsystemBase {
      * @return true when the request started a pulse; false when the shooter was not ready
      */
     public boolean requestFeed() {
-        if (state != State.READY) {
+        // TeleOp requests may arrive before this loop's periodic(). Recheck the encoders here so
+        // the previous loop's READY state cannot authorize a pulse after a speed drop or target change.
+        if (state != State.READY || targetTicksPerSecond <= 0) {
+            return false;
+        }
+        if (!bothFlywheelMotorsAreAtTargetSpeed()) {
+            state = State.SPINNING;
+            stateTimer.reset();
             return false;
         }
         state = State.FEEDING;

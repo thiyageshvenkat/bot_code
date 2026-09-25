@@ -75,9 +75,9 @@ public final class BiobuzzPitDiagnostics extends OpMode {
                         pollenTarget.bearingDegrees, pollenTarget.areaPercent);
             }
         } else if (hiveTarget == null) {
-            telemetry.addData("Red upward Hive Cell", "not visible");
+            telemetry.addData("Red Hive opening estimate", "no usable fresh upright target");
         } else {
-            telemetry.addData("Red upward Hive Cell", "%s | %.1f deg | %d tags",
+            telemetry.addData("Red Hive opening estimate", "%s | %.1f deg | %d tags",
                     hiveTarget.cell, hiveTarget.bearingDegrees, hiveTarget.visibleTagCount);
         }
         telemetry.update();

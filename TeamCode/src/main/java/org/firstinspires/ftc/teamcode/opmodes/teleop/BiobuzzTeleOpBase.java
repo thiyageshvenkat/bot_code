@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.game.ScoringElement;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.vision.BiobuzzVision;
 
-/** Shared competition controls; registered red and blue variants provide alliance-safe nectar handling. */
+/** Driver-controlled competition mode; alliance selection filters vision and tracked nectar entries. */
 abstract class BiobuzzTeleOpBase extends OpMode {
     // Manual counting cannot reliably follow a fast intake and shooter, so it stays disabled.
     // Keep this false when sensors later update ElementInventory automatically.
@@ -36,7 +36,8 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         drivetrain = new Drivetrain(hardwareMap);
         drivetrain.startTeleOp();
         superstructure = new Superstructure(hardwareMap, alliance);
-        superstructure.seedPreloadPollen();
+        // TeleOp does not start with a guaranteed four pollen: Auto may have already fired them.
+        // Leave this unknown count empty; it will not block sensorless driver-requested feeding.
         telemetry.addLine("BIOBUZZ initialized");
         if (MANUAL_INVENTORY_CONTROLS_ENABLED) {
             telemetry.addLine("During INIT: operator dpad up/down corrects preload inventory");
@@ -50,7 +51,7 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         // Let the operator correct the preload count before the match starts.
         updateInventory(false);
         telemetry.addData("Alliance", alliance);
-        telemetry.addData("Starting inventory", superstructure.inventory.snapshot());
+        publishInventory();
         telemetry.update();
     }
 
@@ -76,7 +77,7 @@ abstract class BiobuzzTeleOpBase extends OpMode {
             superstructure.intake.stop();
         }
 
-        // Hold the bumper to spin up and view the upward Hive Cell. Releasing it stops the
+        // Hold the bumper to spin up and view the estimated upright Hive Cell. Releasing it stops the
         // flywheel after any active feed pulse finishes, preventing a half-fed pollen.
         if (gamepad2.right_bumper) {
             superstructure.vision.useHiveAprilTagPipeline();
@@ -89,7 +90,8 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         }
         boolean shoot = gamepad2.right_trigger > 0.5;
         if (shoot && !previousShoot) {
-            superstructure.queueHiveShot();
+            // TeleOp remains driver-aimed. Vision is advisory here, not an automatic firing lock.
+            superstructure.queueHiveShot(inventoryTrackingEnabled());
         }
         previousShoot = shoot;
 
@@ -104,6 +106,18 @@ abstract class BiobuzzTeleOpBase extends OpMode {
     private boolean isIntakeCapacityLocked() {
         return RobotConfig.Intake.ENFORCE_INVENTORY_CAPACITY
                 && superstructure.inventory.isFull();
+    }
+
+    private boolean inventoryTrackingEnabled() {
+        return MANUAL_INVENTORY_CONTROLS_ENABLED || RobotConfig.Intake.ENFORCE_INVENTORY_CAPACITY;
+    }
+
+    private void publishInventory() {
+        if (inventoryTrackingEnabled()) {
+            telemetry.addData("Inventory", superstructure.inventory.snapshot());
+        } else {
+            telemetry.addData("Inventory", "untracked; driver/CAD controls loading and capacity");
+        }
     }
 
     /**
@@ -154,7 +168,7 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         BiobuzzVision.PollenTarget pollenTarget = superstructure.vision.bestPollen();
         BiobuzzVision.HiveTarget hiveTarget = superstructure.vision.upwardHiveTarget(alliance);
         telemetry.addData("Alliance", alliance);
-        telemetry.addData("Inventory", superstructure.inventory.snapshot());
+        publishInventory();
         telemetry.addData("Intake", superstructure.intake.getState());
         telemetry.addData("Intake capacity lockout", isIntakeCapacityLocked());
         telemetry.addData("Shooter RPM", "%s | left: %.0f | right: %.0f | target: %.0f",
@@ -172,9 +186,9 @@ abstract class BiobuzzTeleOpBase extends OpMode {
             }
         } else {
             if (hiveTarget == null) {
-                telemetry.addData("Upward Hive Cell", "not visible");
+                telemetry.addData("Hive opening estimate", "no usable fresh upright target");
             } else {
-                telemetry.addData("Upward Hive Cell", "%s | %.1f deg | %d tags",
+                telemetry.addData("Hive opening estimate", "%s | %.1f deg | %d tags",
                         hiveTarget.cell, hiveTarget.bearingDegrees, hiveTarget.visibleTagCount);
             }
         }

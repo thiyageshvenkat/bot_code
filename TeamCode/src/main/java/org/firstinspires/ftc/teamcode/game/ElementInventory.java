@@ -26,8 +26,13 @@ public final class ElementInventory {
         return true;
     }
 
-    /** Removes the oldest indexed element after a confirmed feed or deposit. */
+    /** Removes the oldest entry after an assumed completed feed or a confirmed deposit. */
     public synchronized ScoringElement releaseNext() { return elements.pollFirst(); }
+
+    /** Sensorless driver control must not be locked out by an inventory nobody is updating. */
+    public synchronized boolean permitsFeed(boolean requireTrackedElement) {
+        return !requireTrackedElement || !elements.isEmpty();
+    }
 
     /** Removes the newest element when the intake reverses it back to the field. */
     public synchronized ScoringElement rejectNewest() { return elements.pollLast(); }

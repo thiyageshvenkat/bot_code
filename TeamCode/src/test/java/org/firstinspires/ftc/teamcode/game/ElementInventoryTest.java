@@ -38,4 +38,20 @@ public class ElementInventoryTest {
         assertEquals(ScoringElement.POLLEN, inventory.peekNext());
     }
 
+    @Test public void sensorlessDriverCanFeedAgainAfterFourPulsesButAutoCannot() {
+        ElementInventory inventory = new ElementInventory(AllianceColor.RED);
+        for (int i = 0; i < ElementInventory.CAPACITY; i++) {
+            inventory.tryAdd(ScoringElement.POLLEN);
+        }
+        for (int i = 0; i < ElementInventory.CAPACITY; i++) {
+            assertTrue(inventory.permitsFeed(true));
+            inventory.releaseNext();
+        }
+        assertFalse(inventory.permitsFeed(true));
+        assertTrue(inventory.permitsFeed(false));
+        inventory.releaseNext();
+        assertTrue(inventory.permitsFeed(false));
+        assertEquals(0, inventory.size());
+    }
+
 }
