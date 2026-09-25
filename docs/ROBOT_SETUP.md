@@ -17,10 +17,11 @@ calibrated or field-tested on the physical robot. Treat every value marked
 | `flywheel_left`, `flywheel_right` | encoder-equipped launcher motors |
 | `feeder` | launcher feeder motor |
 | `hood` | launcher angle servo |
-| `limelight` | Limelight 3A running the pollen detector |
+| `limelight` | Limelight 3A running pollen and 36h11 AprilTag pipelines |
 
-No beam-break or magazine sensor is documented, so the operator keeps the
-four-element inventory model synchronized with D-pad corrections.
+No beam-break or magazine sensor is documented. Manual inventory correction and
+automatic intake lockout remain disabled, so CAD must prevent control of a fifth
+element until sensors make the software inventory trustworthy.
 
 ## Bring-up order
 
@@ -33,7 +34,9 @@ four-element inventory model synchronized with D-pad corrections.
 4. At low power, verify positive drive, strafe, and turn directions. Correct
    motor directions in `pedroPathing/Constants.java`, never by swapping gamepad
    signs until the wheel convention is correct.
-5. Confirm the Limelight is connected and reports the `yellow_pollen` class.
+5. Configure Limelight pipeline 0 for the `yellow_pollen` detector and pipeline
+   1 for 36h11 AprilTags. Confirm the diagnostic sees the correct own-alliance
+   Hive Cell tag ranges: red 30-37 and blue 38-45.
 6. Measure Pinpoint X/Y offsets, encoder directions, track width, wheel radius,
    and motion constraints using the Pedro tuning OpModes.
 7. Determine safe hood endpoints without driving the servo into a hard stop.
@@ -56,13 +59,9 @@ four-element inventory model synchronized with D-pad corrections.
 - `A` or `X`: run intake inward
 - `Y`: reverse intake
 - `B` or no intake button: stop intake
-- Right bumper: spin up the fixed-distance shot
+- Hold right bumper: select Hive tags and keep the shooter spinning
 - Right trigger: feed one tracked element when the flywheels are ready
-- D-pad up: record one collected pollen
-- D-pad right: record one collected alliance nectar
-- D-pad down: remove the newest tracked element as a correction
 
-During TeleOp initialization, D-pad up/down corrects the starting inventory.
 Choose the red or blue OpMode matching the Driver Station alliance so opposing
 nectar is rejected by the inventory model.
 
@@ -73,7 +72,9 @@ nectar is rejected by the inventory model.
 - Confirm exactly four preload pollen in both the robot and init telemetry.
 - Test E-stop, battery retention, wheel/odometry fasteners, Limelight results,
   intake direction, and launcher direction.
-- Dry-run autonomous from the taped start pose and verify the loading-zone park.
+- Dry-run autonomous from the taped start pose. Verify it identifies the
+  upward-facing own-alliance Cell, turns toward its tag cluster, pauses during a
+  Hive tip, targets the newly upward Cell, and reaches the loading-zone park.
 - Inspect flywheels, guards, hood, feeder, intake, and every moving wire.
 - Keep a conservative park-only autonomous available until shot and path tuning
   are repeatable on a regulation field.
