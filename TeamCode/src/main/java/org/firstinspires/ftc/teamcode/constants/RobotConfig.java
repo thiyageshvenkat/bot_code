@@ -100,8 +100,22 @@ public final class RobotConfig {
         public static final String POLLEN_CLASS = "yellow_pollen";
         // VERIFY: Limelight neural-detector pipeline selected when vision starts.
         public static int POLLEN_PIPELINE = 0;
+        // VERIFY: configure this Limelight pipeline for the official 36h11 Hive AprilTags.
+        public static int HIVE_APRILTAG_PIPELINE = 1;
         // TUNE: detections below this confidence, from zero to one, are ignored.
         public static double MIN_CONFIDENCE = .40;
+        // TUNE: horizontal tag bearing that centers the launcher on the Cell opening. This may not
+        // be zero when the Limelight and launcher are mounted at different horizontal positions.
+        public static double HIVE_AIM_BEARING_DEGREES = 0;
+        // TUNE: maximum horizontal aiming error allowed before autonomous can feed pollen.
+        public static double HIVE_AIM_TOLERANCE_DEGREES = 2;
+        // TUNE: autonomous turn power per degree of horizontal aiming error. Reverse the sign if
+        // the first low-power test turns away from the visible tag cluster.
+        public static double HIVE_AIM_TURN_POWER_PER_DEGREE = .018;
+        // TUNE: maximum autonomous turn power while correcting Hive aim.
+        public static double HIVE_AIM_MAX_TURN_POWER = .25;
+        // TUNE: time the same upward Cell must remain visible and aligned before each feed pulse.
+        public static double HIVE_AIM_HOLD_SECONDS = .15;
     }
 
     public static final class Auto {
@@ -110,8 +124,8 @@ public final class RobotConfig {
         // public static double PATH_TIMEOUT_SECONDS = 6;
         // TUNE (disabled): the first shot may spin up until SHOOT_CUTOFF_SECONDS.
         // public static double ALIGN_TIMEOUT_SECONDS = 2.5;
-        // TUNE: stop requesting shots here, leaving 7.5 seconds to reach the park.
-        public static double SHOOT_CUTOFF_SECONDS = 21.5;
+        // TUNE: stop requesting shots here, leaving 3 seconds to reach the park.
+        public static double SHOOT_CUTOFF_SECONDS = 27;
         // Final fail-safe: stop every mechanism one second before a 30-second auto ends.
         public static double MATCH_SAFETY_CUTOFF_SECONDS = 29;
     }

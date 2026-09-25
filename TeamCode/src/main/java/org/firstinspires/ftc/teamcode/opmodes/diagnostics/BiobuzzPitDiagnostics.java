@@ -7,7 +7,7 @@ import org.firstinspires.ftc.teamcode.control.ShotModel;
 import org.firstinspires.ftc.teamcode.control.Superstructure;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
-import org.firstinspires.ftc.teamcode.vision.PollenVision;
+import org.firstinspires.ftc.teamcode.vision.BiobuzzVision;
 
 /** Hold-to-run checks for the hardware documented by the existing robot code. */
 @TeleOp(name = "BIOBUZZ Pit Diagnostics", group = "BIOBUZZ Diagnostics")
@@ -29,19 +29,36 @@ public final class BiobuzzPitDiagnostics extends OpMode {
     @Override
     public void loop() {
         boolean armed = gamepad2.start;
-        drivetrain.setMovement(armed ? -gamepad1.left_stick_y : 0,
-                armed ? gamepad1.left_stick_x : 0,
-                armed ? gamepad1.right_stick_x : 0);
-        if (armed && gamepad2.a) superstructure.intake.collect();
-        else if (armed && gamepad2.y) superstructure.intake.reverse();
-        else superstructure.intake.stop();
+        double forward = 0;
+        double strafe = 0;
+        double turn = 0;
+        if (armed) {
+            forward = -gamepad1.left_stick_y;
+            strafe = gamepad1.left_stick_x;
+            turn = gamepad1.right_stick_x;
+        }
+        drivetrain.setMovement(forward, strafe, turn);
+
+        if (armed && gamepad2.a) {
+            superstructure.intake.collect();
+        } else if (armed && gamepad2.y) {
+            superstructure.intake.reverse();
+        } else {
+            superstructure.intake.stop();
+        }
         if (armed && gamepad2.right_bumper) {
+            superstructure.vision.useHiveAprilTagPipeline();
             superstructure.shooter.prepare(ShotModel.forDistance(30.0));
-        } else superstructure.shooter.stop();
+        } else {
+            superstructure.vision.usePollenPipeline();
+            superstructure.shooter.stop();
+        }
 
         drivetrain.periodic();
         superstructure.periodic();
-        PollenVision.Target target = superstructure.vision.bestPollen();
+        BiobuzzVision.PollenTarget pollenTarget = superstructure.vision.bestPollen();
+        BiobuzzVision.HiveTarget hiveTarget = superstructure.vision.upwardHiveTarget(
+                AllianceColor.RED);
         telemetry.addData("ARMED", armed);
         telemetry.addData("Pose", drivetrain.getPose());
         telemetry.addData("Intake", superstructure.intake.getState());
@@ -49,8 +66,20 @@ public final class BiobuzzPitDiagnostics extends OpMode {
                 superstructure.shooter.getLeftSpeedRpm(),
                 superstructure.shooter.getRightSpeedRpm());
         telemetry.addData("Limelight", superstructure.vision.isConnected());
-        telemetry.addData("Pollen", target == null ? "not visible"
-                : String.format("%.1f deg, %.2f%%", target.bearingDegrees, target.areaPercent));
+        telemetry.addData("Vision mode", superstructure.vision.getMode());
+        if (superstructure.vision.getMode() == BiobuzzVision.Mode.POLLEN) {
+            if (pollenTarget == null) {
+                telemetry.addData("Pollen", "not visible");
+            } else {
+                telemetry.addData("Pollen", "%.1f deg, %.2f%%",
+                        pollenTarget.bearingDegrees, pollenTarget.areaPercent);
+            }
+        } else if (hiveTarget == null) {
+            telemetry.addData("Red upward Hive Cell", "not visible");
+        } else {
+            telemetry.addData("Red upward Hive Cell", "%s | %.1f deg | %d tags",
+                    hiveTarget.cell, hiveTarget.bearingDegrees, hiveTarget.visibleTagCount);
+        }
         telemetry.update();
     }
 

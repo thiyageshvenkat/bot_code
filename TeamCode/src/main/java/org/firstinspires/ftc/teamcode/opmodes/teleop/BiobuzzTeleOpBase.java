@@ -7,7 +7,7 @@ import org.firstinspires.ftc.teamcode.control.Superstructure;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.firstinspires.ftc.teamcode.game.ScoringElement;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
-import org.firstinspires.ftc.teamcode.vision.PollenVision;
+import org.firstinspires.ftc.teamcode.vision.BiobuzzVision;
 
 /** Shared competition controls; registered red and blue variants provide alliance-safe nectar handling. */
 abstract class BiobuzzTeleOpBase extends OpMode {
@@ -76,9 +76,16 @@ abstract class BiobuzzTeleOpBase extends OpMode {
             superstructure.intake.stop();
         }
 
-        // Hold the bumper to spin up; each trigger press requests one feed cycle.
+        // Hold the bumper to spin up and view the upward Hive Cell. Releasing it stops the
+        // flywheel after any active feed pulse finishes, preventing a half-fed pollen.
         if (gamepad2.right_bumper) {
+            superstructure.vision.useHiveAprilTagPipeline();
             superstructure.prepareHiveShot();
+        } else {
+            superstructure.vision.usePollenPipeline();
+            if (!superstructure.isBusy()) {
+                superstructure.shooter.stop();
+            }
         }
         boolean shoot = gamepad2.right_trigger > 0.5;
         if (shoot && !previousShoot) {
@@ -144,7 +151,8 @@ abstract class BiobuzzTeleOpBase extends OpMode {
 
     private void publishTelemetry() {
         // Show the values most useful to the drive team during a match.
-        PollenVision.Target target = superstructure.vision.bestPollen();
+        BiobuzzVision.PollenTarget pollenTarget = superstructure.vision.bestPollen();
+        BiobuzzVision.HiveTarget hiveTarget = superstructure.vision.upwardHiveTarget(alliance);
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Inventory", superstructure.inventory.snapshot());
         telemetry.addData("Intake", superstructure.intake.getState());
@@ -154,11 +162,21 @@ abstract class BiobuzzTeleOpBase extends OpMode {
                 superstructure.shooter.getRightSpeedRpm(),
                 superstructure.shooter.getTargetRpm());
         telemetry.addData("Limelight", superstructure.vision.isConnected());
-        if (target == null) {
-            telemetry.addData("Pollen", "not visible");
+        telemetry.addData("Vision mode", superstructure.vision.getMode());
+        if (superstructure.vision.getMode() == BiobuzzVision.Mode.POLLEN) {
+            if (pollenTarget == null) {
+                telemetry.addData("Pollen", "not visible");
+            } else {
+                telemetry.addData("Pollen", "%.1f deg, %.2f%%",
+                        pollenTarget.bearingDegrees, pollenTarget.areaPercent);
+            }
         } else {
-            telemetry.addData("Pollen", "%.1f deg, %.2f%%",
-                    target.bearingDegrees, target.areaPercent);
+            if (hiveTarget == null) {
+                telemetry.addData("Upward Hive Cell", "not visible");
+            } else {
+                telemetry.addData("Upward Hive Cell", "%s | %.1f deg | %d tags",
+                        hiveTarget.cell, hiveTarget.bearingDegrees, hiveTarget.visibleTagCount);
+            }
         }
         telemetry.addData("Pose", drivetrain.getPose());
         telemetry.update();

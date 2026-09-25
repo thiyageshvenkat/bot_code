@@ -76,6 +76,11 @@ public class Drivetrain extends SubsystemBase {
                 shape(turn) * speedScale);
     }
 
+    /** Turns in place at a direct power requested by autonomous vision alignment. */
+    public void turnInPlace(double turnPower) {
+        follower.manual(0, 0, Range.clip(turnPower, -1.0, 1.0));
+    }
+
     private void applyMovement(double forward, double strafe, double turn) {
         if (isRobotCentric) {
             follower.manual(forward, strafe, turn);

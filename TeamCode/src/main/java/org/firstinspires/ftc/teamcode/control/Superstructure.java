@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.game.ElementInventory;
 import org.firstinspires.ftc.teamcode.game.ScoringElement;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Shooter;
-import org.firstinspires.ftc.teamcode.vision.PollenVision;
+import org.firstinspires.ftc.teamcode.vision.BiobuzzVision;
 
 /**
  * Coordination layer between an OpMode and the robot mechanisms other than the drivetrain.
@@ -21,7 +21,7 @@ public final class Superstructure implements AutoCloseable {
     public final ElementInventory inventory;
     public final Intake intake;
     public final Shooter shooter;
-    public final PollenVision vision;
+    public final BiobuzzVision vision;
 
     /**
      * Creates the mechanisms that competition TeleOp and autonomous use together. Consequently,
@@ -32,7 +32,7 @@ public final class Superstructure implements AutoCloseable {
         inventory = new ElementInventory(alliance);
         intake = new Intake(hardwareMap);
         shooter = new Shooter(hardwareMap);
-        vision = new PollenVision(hardwareMap);
+        vision = new BiobuzzVision(hardwareMap);
     }
 
     /**
