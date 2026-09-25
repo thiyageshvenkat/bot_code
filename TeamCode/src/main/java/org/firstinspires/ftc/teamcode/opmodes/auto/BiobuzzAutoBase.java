@@ -11,34 +11,55 @@ import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 import org.firstinspires.ftc.teamcode.vision.BiobuzzVision;
 import org.firstinspires.ftc.teamcode.vision.HiveAim;
 
-/** Shared, timeout-protected preload scoring autonomous. */
+/**
+ * Shared implementation behind the registered red and blue BIOBUZZ autonomous OpModes.
+ *
+ * <p>This is deliberately a conservative preload routine: follow the alliance plan to one fixed
+ * shooting position, qualify a visible Hive opening, feed the four assumed preloads, and drive to
+ * the loading-zone park. It does not yet execute the Garden/Flower portions retained in
+ * BiobuzzAutoPlan or reposition around the Hive after a tip. The concrete red/blue classes exist so
+ * the Driver Station can register two choices while this lifecycle and safety logic stays shared.</p>
+ */
 abstract class BiobuzzAutoBase extends OpMode {
+    // State boundaries prevent path following, vision turning, and parking from commanding the
+    // drivetrain at the same time. DONE remains active until FTC calls stop().
     private enum State { DRIVE_TO_SHOT, ALIGN_AND_SHOOT, DRIVE_TO_PARK, DONE }
 
+    // Alliance affects both route mirroring and which Hive tag IDs are acceptable.
     private final AllianceColor alliance;
+    // One match clock makes cutoff decisions independent of how long any path or shot takes.
     private final ElapsedTime matchTimer = new ElapsedTime();
+    // HiveAim remembers observations across loops; the OpMode still owns mechanism commands.
     private final HiveAim hiveAim = new HiveAim();
+    // Starts when a feed pulse actually finishes, so the delay includes ball flight/tip onset rather
+    // than time spent pushing the pollen through the feeder.
     private final ElapsedTime sinceFeed = new ElapsedTime();
     private Drivetrain drivetrain;
     private Superstructure superstructure;
     private BiobuzzAutoPlan plan;
     private State state;
+    // Counts accepted feed requests for driver-station diagnostics, not confirmed scored pollen.
     private int shotsRequested;
+    // Read once per loop and shared by control and telemetry so they describe the same camera frame.
     private BiobuzzVision.HiveTarget hiveTarget;
 
+    /** Receives the fixed alliance from BiobuzzRedAuto or BiobuzzBlueAuto. */
     BiobuzzAutoBase(AllianceColor alliance) {
         this.alliance = alliance;
     }
 
     @Override
     public void init() {
+        // INIT establishes localization and the four-preload software assumption. Shooter
+        // construction also stows the hood, so physical clearance must be checked before INIT.
         plan = BiobuzzAutoPlan.forAlliance(alliance);
         drivetrain = new Drivetrain(hardwareMap);
         drivetrain.startAuto();
         drivetrain.setPose(plan.start);
         superstructure = new Superstructure(hardwareMap, alliance);
         superstructure.seedPreloadPollen();
-        // Tag orientation and the opening geometry qualify a target; visibility alone does not.
+        // Start switching early so INIT telemetry can expose camera/pipeline problems before PLAY.
+        // Tag orientation and opening geometry qualify a target; visibility alone does not.
         superstructure.vision.useHiveAprilTagPipeline();
         telemetry.addData("BIOBUZZ auto", alliance);
         telemetry.addLine("Check start pose, visible own-Hive tags, and clear park route");
@@ -46,6 +67,8 @@ abstract class BiobuzzAutoBase extends OpMode {
 
     @Override
     public void init_loop() {
+        // This is observation-only: the launcher and drivetrain stay stopped while the drive team
+        // checks the chosen alliance, taped start pose, camera mount, and target visibility.
         telemetry.addData("Start pose", plan.start);
         telemetry.addData("Limelight connected", superstructure.vision.isConnected());
         BiobuzzVision.HiveTarget target = superstructure.vision.upwardHiveTarget(alliance);
@@ -61,6 +84,8 @@ abstract class BiobuzzAutoBase extends OpMode {
 
     @Override
     public void start() {
+        // FTC calls start at the beginning of the 30-second period. All timing must begin here,
+        // rather than during an unpredictably long INIT wait.
         matchTimer.reset();
         transition(State.DRIVE_TO_SHOT);
         drivetrain.followPath(plan.toShoot);
@@ -68,15 +93,20 @@ abstract class BiobuzzAutoBase extends OpMode {
 
     @Override
     public void loop() {
+        // The hard cutoff takes priority over state logic. It is intentionally allowed to interrupt
+        // an active feeder pulse because stopping before Auto ends is the higher-level safety rule.
         if (matchTimer.seconds() >= RobotConfig.Auto.MATCH_SAFETY_CUTOFF_SECONDS) {
             drivetrain.stop();
             superstructure.stopAll();
             transition(State.DONE);
         } else {
+            // Update hardware before making the next decision so completion, RPM, pose, and camera
+            // observations describe the newest available control cycle.
             drivetrain.periodic();
             boolean wasFeeding = superstructure.isBusy();
             superstructure.periodic();
             if (wasFeeding && !superstructure.isBusy()) {
+                // A completed pulse begins the deliberate delay before the next Hive qualification.
                 sinceFeed.reset();
             }
             hiveTarget = superstructure.vision.upwardHiveTarget(alliance);
@@ -88,6 +118,8 @@ abstract class BiobuzzAutoBase extends OpMode {
     private void runState() {
         switch (state) {
             case DRIVE_TO_SHOT:
+                // Pedro owns the drivetrain until the path reports complete; vision does not fight
+                // the path follower while approaching the fixed shooting position.
                 if (!drivetrain.isBusy()) {
                     drivetrain.stop();
                     transition(State.ALIGN_AND_SHOOT);
@@ -95,6 +127,8 @@ abstract class BiobuzzAutoBase extends OpMode {
                 break;
 
             case ALIGN_AND_SHOOT:
+                // Auto tracks only its four assumed preloads. It parks after those pulses or when
+                // the configured shooting window closes, even if a shot was not physically sensed.
                 if (superstructure.inventory.peekNext() == null
                         || matchTimer.seconds() >= RobotConfig.Auto.SHOOT_CUTOFF_SECONDS) {
                     // Normal transitions finish a feed; the separate 29-second fail-safe is immediate.
@@ -107,6 +141,7 @@ abstract class BiobuzzAutoBase extends OpMode {
                 break;
 
             case DRIVE_TO_PARK:
+                // Hold the final pose instead of leaving the drivetrain uncontrolled after arrival.
                 if (!drivetrain.isBusy()) {
                     drivetrain.holdCurrentPose();
                     superstructure.shooter.stop();
@@ -115,10 +150,12 @@ abstract class BiobuzzAutoBase extends OpMode {
                 break;
 
             case DONE:
+                // Outputs were already made safe during the transition that reached this state.
                 break;
         }
     }
 
+    /** Ends targeting, makes the launcher safe, and hands drivetrain ownership back to Pedro. */
     private void beginPark() {
         hiveAim.reset();
         drivetrain.stop();
@@ -133,6 +170,7 @@ abstract class BiobuzzAutoBase extends OpMode {
      * all thresholds need field validation and cannot guarantee a mechanical damper has settled.
      */
     private void aimAndShootAtUpwardCell() {
+        // Spinning up may happen while vision is still qualifying the opening, saving Auto time.
         superstructure.prepareHiveShot();
         if (superstructure.isBusy()) {
             // Do not turn during a feed pulse, and start the next stability check after it finishes.
@@ -143,6 +181,8 @@ abstract class BiobuzzAutoBase extends OpMode {
 
         BiobuzzVision.HiveTarget target = hiveTarget;
         if (target == null) {
+            // Target loss stops turning and destroys previous stability credit. An old alignment
+            // must never authorize a feed when the camera starts reporting again.
             drivetrain.stop();
             hiveAim.reset();
             return;
@@ -151,6 +191,7 @@ abstract class BiobuzzAutoBase extends OpMode {
         double bearingError = target.bearingDegrees
                 - RobotConfig.Vision.HIVE_AIM_BEARING_DEGREES;
         if (Math.abs(bearingError) > RobotConfig.Vision.HIVE_AIM_TOLERANCE_DEGREES) {
+            // Only rotate here; the path already placed the robot at the calibrated shot distance.
             drivetrain.turnInPlace(HiveAim.turnPower(target.bearingDegrees));
             hiveAim.reset();
             return;
@@ -159,6 +200,8 @@ abstract class BiobuzzAutoBase extends OpMode {
         drivetrain.stop();
         if (shotsRequested > 0
                 && sinceFeed.seconds() < RobotConfig.Vision.HIVE_POST_FEED_WAIT_SECONDS) {
+            // The next observation interval must begin after the previous pollen has had time to
+            // reach the Hive and reveal whether a tip started.
             hiveAim.reset();
             return;
         }
@@ -169,16 +212,20 @@ abstract class BiobuzzAutoBase extends OpMode {
         }
         if (hiveAim.readyToFeed(target, matchTimer.seconds())
                 && superstructure.queueHiveShot(true)) {
+            // This records an initiated pulse. Superstructure removes the inventory entry only when
+            // the timed pulse finishes; without a beam sensor neither event proves a successful shot.
             shotsRequested++;
             hiveAim.reset();
             sinceFeed.reset();
         }
     }
 
+    /** Keeps state assignment in one place so future transition logging can be added consistently. */
     private void transition(State next) {
         state = next;
     }
 
+    /** Publishes control-relevant evidence so a failed run can be diagnosed from Driver Station. */
     private void publishTelemetry() {
         telemetry.addData("Alliance", alliance);
         telemetry.addData("State", state);
@@ -199,6 +246,7 @@ abstract class BiobuzzAutoBase extends OpMode {
 
     @Override
     public void stop() {
+        // FTC can stop the OpMode from any state, including during a path or feed pulse.
         drivetrain.stop();
         superstructure.close();
     }
