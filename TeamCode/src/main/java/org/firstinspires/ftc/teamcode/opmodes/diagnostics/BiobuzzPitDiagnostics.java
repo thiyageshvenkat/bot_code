@@ -45,7 +45,7 @@ public final class BiobuzzPitDiagnostics extends OpMode {
         telemetry.addData("ARMED", armed);
         telemetry.addData("Pose", drivetrain.getPose());
         telemetry.addData("Intake", superstructure.intake.getState());
-        telemetry.addData("Flywheel", "%.0f TPS", superstructure.shooter.getVelocity());
+        telemetry.addData("Flywheel", "%.0f RPM", superstructure.shooter.getSpeedRpm());
         telemetry.addData("Limelight", superstructure.vision.isConnected());
         telemetry.addData("Pollen", target == null ? "not visible"
                 : String.format("%.1f deg, %.2f%%", target.bearingDegrees, target.areaPercent));

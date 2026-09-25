@@ -25,7 +25,12 @@ public final class RobotConfig {
         public static final String FLYWHEEL = "flywheel_left";
         public static final String FEEDER = "feeder", HOOD = "hood";
         public static boolean FEEDER_REVERSED = false;
-        public static double DEFAULT_VELOCITY_TPS = 1850, VELOCITY_TOLERANCE_TPS = 75;
+        // Starting shooter speed; distance adjustment raises or lowers this target.
+        public static double SHOOTER_BASE_TARGET_RPM = 4000;
+        // Feeding is allowed only when measured RPM is within this amount of the target.
+        public static double SHOOTER_MAX_READY_ERROR_RPM = 160;
+        // Encoder pulses produced by one complete shooter motor-shaft revolution.
+        public static double SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION = 28;
         public static double READY_HOLD_SECONDS = .12, FEED_POWER = .85, FEED_SECONDS = .18;
         public static double HOOD_STOW = .16, HOOD_NEAR = .43, HOOD_FAR = .62; // TUNE
         public static double NEAR_DISTANCE_IN = 30, FAR_DISTANCE_IN = 84;

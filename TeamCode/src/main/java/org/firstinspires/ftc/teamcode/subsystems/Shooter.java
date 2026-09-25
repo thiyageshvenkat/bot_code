@@ -22,7 +22,7 @@ public final class Shooter extends SubsystemBase {
     private final ElapsedTime stateTimer = new ElapsedTime();
 
     private State state = State.STOPPED;
-    private double targetVelocity;
+    private double targetTicksPerSecond;
     private boolean shotCompleted;
 
     public Shooter(HardwareMap hardwareMap) {
@@ -40,9 +40,9 @@ public final class Shooter extends SubsystemBase {
 
     public void prepare(ShotModel solution) {
         if (solution == null) return;
-        targetVelocity = Math.max(0.0, solution.flywheelVelocity);
+        targetTicksPerSecond = rpmToTicksPerSecond(Math.max(0.0, solution.shooterTargetRpm));
         hood.setPosition(Range.clip(solution.hoodPosition, 0.0, 1.0));
-        flywheel.setVelocity(targetVelocity);
+        flywheel.setVelocity(targetTicksPerSecond);
         if (state == State.STOPPED) {
             state = State.SPINNING;
             stateTimer.reset();
@@ -61,13 +61,13 @@ public final class Shooter extends SubsystemBase {
         flywheel.setPower(0);
         feeder.setPower(0);
         hood.setPosition(RobotConfig.Shooter.HOOD_STOW);
-        targetVelocity = 0.0;
+        targetTicksPerSecond = 0.0;
         state = State.STOPPED;
     }
 
     public State getState() { return state; }
-    public double getTargetVelocity() { return targetVelocity; }
-    public double getVelocity() { return flywheel.getVelocity(); }
+    public double getTargetRpm() { return ticksPerSecondToRpm(targetTicksPerSecond); }
+    public double getSpeedRpm() { return ticksPerSecondToRpm(flywheel.getVelocity()); }
 
     public boolean consumeShotCompleted() {
         boolean completed = shotCompleted;
@@ -79,8 +79,8 @@ public final class Shooter extends SubsystemBase {
     public void periodic() {
         if (state == State.STOPPED) return;
 
-        boolean atSpeed = Math.abs(flywheel.getVelocity() - targetVelocity)
-                <= RobotConfig.Shooter.VELOCITY_TOLERANCE_TPS;
+        boolean atSpeed = Math.abs(flywheel.getVelocity() - targetTicksPerSecond)
+                <= rpmToTicksPerSecond(RobotConfig.Shooter.SHOOTER_MAX_READY_ERROR_RPM);
 
         if (state == State.SPINNING) {
             if (!atSpeed) stateTimer.reset();
@@ -104,5 +104,14 @@ public final class Shooter extends SubsystemBase {
         motor.setDirection(direction);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+    }
+
+    private static double rpmToTicksPerSecond(double rpm) {
+        return rpm * RobotConfig.Shooter.SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION / 60.0;
+    }
+
+    private static double ticksPerSecondToRpm(double ticksPerSecond) {
+        return ticksPerSecond * 60.0
+                / RobotConfig.Shooter.SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION;
     }
 }

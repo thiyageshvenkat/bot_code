@@ -12,8 +12,8 @@ public class ShotModelTest {
         ShotModel middle = ShotModel.forDistance(
                 (RobotConfig.Shooter.NEAR_DISTANCE_IN + RobotConfig.Shooter.FAR_DISTANCE_IN) / 2.0);
         ShotModel far = ShotModel.forDistance(RobotConfig.Shooter.FAR_DISTANCE_IN);
-        assertTrue(near.flywheelVelocity < middle.flywheelVelocity);
-        assertTrue(middle.flywheelVelocity < far.flywheelVelocity);
+        assertTrue(near.shooterTargetRpm < middle.shooterTargetRpm);
+        assertTrue(middle.shooterTargetRpm < far.shooterTargetRpm);
         assertTrue(near.hoodPosition < far.hoodPosition);
     }
 
