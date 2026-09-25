@@ -43,18 +43,29 @@ public final class Shooter extends SubsystemBase {
     // This is not sensor confirmation of a launched pollen; it records only a completed feed pulse.
     private boolean feedPulseCompleted;
 
+    /**
+     * Connects this subsystem to the configured REV devices when Superstructure is created during
+     * OpMode initialization. A missing or incorrectly named device fails here, before the match
+     * starts. Motor directions are chosen so the same positive velocity command should make both
+     * motors assist the shared flywheel; that physical direction still must be verified safely.
+     */
     public Shooter(HardwareMap hardwareMap) {
         leftFlywheel = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.LEFT_FLYWHEEL);
         rightFlywheel = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.RIGHT_FLYWHEEL);
         feeder = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.FEEDER);
         hood = hardwareMap.get(Servo.class, RobotConfig.Shooter.HOOD);
 
+        // Flywheel encoders provide the velocity feedback used to qualify the launcher as READY.
         configureFlywheel(leftFlywheel, DcMotorSimple.Direction.FORWARD);
         configureFlywheel(rightFlywheel,
                 directionFromReversedSetting(RobotConfig.Shooter.RIGHT_FLYWHEEL_REVERSED));
+
+        // The feeder has no position or pollen sensor, so it runs open-loop for a tuned duration.
         feeder.setDirection(directionFromReversedSetting(RobotConfig.Shooter.FEEDER_REVERSED));
         feeder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         feeder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        // Initialization must leave every actuator off until TeleOp or autonomous requests a shot.
         stop();
     }
 
@@ -128,8 +139,15 @@ public final class Shooter extends SubsystemBase {
         return completed;
     }
 
+    /**
+     * Advances the launcher state machine once per robot-control loop. Superstructure calls this
+     * method from both TeleOp and autonomous; without that call, readiness and feeder timing would
+     * never advance. This method monitors work started by prepare() or requestFeed() rather than
+     * independently deciding to shoot.
+     */
     @Override
     public void periodic() {
+        // Nothing is being timed or monitored until prepare() starts the flywheel.
         if (state == State.STOPPED) {
             return;
         }
@@ -149,6 +167,8 @@ public final class Shooter extends SubsystemBase {
             stateTimer.reset();
         } else if (state == State.FEEDING
                 && stateTimer.seconds() >= RobotConfig.Shooter.FEED_SECONDS) {
+            // Once feeding starts, finish the tuned pulse even if flywheel RPM falls. Interrupting
+            // it could leave pollen partly engaged. The next shot must regain READY afterward.
             // With no feeder sensor, elapsed time is the only available completion signal.
             feeder.setPower(0);
             feedPulseCompleted = true;
