@@ -59,7 +59,7 @@ public final class Constants {
         c.maxAchievableStrafeVelocity.set(40.0);
         c.naturalForwardDeceleration.set(80.0);
         c.naturalStrafeDeceleration.set(80.0);
-        c.maxPathSpeed.set(RobotConfig.Drive.FORESIGHT_TUNED ? 1.0 : 0.35);
+        c.maxPathSpeed.set(RobotConfig.Drive.AUTO_PATH_SPEED_LIMIT);
     });
 
     public static Follower create(HardwareMap hardwareMap) {

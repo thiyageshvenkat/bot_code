@@ -23,12 +23,16 @@ public final class RobotConfig {
         public static double NORMAL_SCALE = .82;
         // TUNE: maximum drive output while the driver holds precision mode.
         public static double PRECISION_SCALE = .35;
-        // TUNE: replace zero with the measured Pinpoint X-pod offset in inches.
+        // TUNE: sideways distance from the robot's rotation center to the forward-tracking
+        // Pinpoint pod, in inches. Left of center is positive; right is negative.
         public static double PINPOINT_X_OFFSET_IN = 0;
-        // TUNE: replace zero with the measured Pinpoint Y-pod offset in inches.
+        // TUNE: forward/backward distance from the robot's rotation center to the
+        // sideways-tracking Pinpoint pod, in inches. Forward is positive; backward is negative.
         public static double PINPOINT_Y_OFFSET_IN = 0;
-        // Set true only after replacing the placeholder Pedro gains with tuner results.
-        public static boolean FORESIGHT_TUNED = false;
+        // TUNE: maximum Pedro autonomous path speed, from 0.0 to 1.0. Start at 0.35,
+        // run ForesightTuner, install its measured values, then raise this gradually toward 1.0.
+        // Do not compensate for this safety limit by multiplying controller gains or velocities.
+        public static double AUTO_PATH_SPEED_LIMIT = .35;
     }
 
     public static final class Intake {
