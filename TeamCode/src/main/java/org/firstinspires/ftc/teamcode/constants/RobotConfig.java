@@ -19,8 +19,9 @@ public final class RobotConfig {
         public static final String PINPOINT = "pinpoint";
         // TUNE: increase only if an untouched joystick causes motor movement.
         public static double STICK_DEADBAND = .06;
-        // TUNE: maximum drive output during normal TeleOp driving.
-        public static double NORMAL_SCALE = .82;
+        // TUNE: maximum TeleOp drive power, from 0.0 to 1.0. Keep at 1.0 for full speed;
+        // lower it only if testing shows poor control, wheel slip, or electrical brownouts.
+        public static double NORMAL_DRIVE_POWER_LIMIT = 1.0;
         // TUNE: maximum drive output while the driver holds precision mode.
         public static double PRECISION_SCALE = .35;
         // TUNE: sideways distance from the robot's rotation center to the forward-tracking
@@ -61,7 +62,8 @@ public final class RobotConfig {
         public static double SHOOTER_BASE_TARGET_RPM = 4000;
         // TUNE: maximum RPM error allowed before the feeder may run.
         public static double SHOOTER_MAX_READY_ERROR_RPM = 160;
-        // VERIFY: encoder pulses per motor-shaft revolution; 28 matches the documented motor.
+        // VERIFY: encoder ticks per motor-shaft revolution. The exact shooter motor is not yet
+        // documented; 28 is valid only if its encoder produces 28 ticks per motor revolution.
         public static double SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION = 28;
         // TUNE: seconds the shooter must remain within its allowed RPM error before feeding.
         public static double READY_HOLD_SECONDS = .12;

@@ -20,7 +20,7 @@ public class Drivetrain extends SubsystemBase {
     private final Follower follower;
 
     private boolean isRobotCentric = false;
-    private double speedScale = RobotConfig.Drive.NORMAL_SCALE;
+    private double speedScale = RobotConfig.Drive.NORMAL_DRIVE_POWER_LIMIT;
 
     /**
      * Every {@code Subsystem} should take only the {@code HardwareMap} into its constructor.
@@ -57,7 +57,7 @@ public class Drivetrain extends SubsystemBase {
     public void setPrecisionMode(boolean enabled) {
         speedScale = enabled
                 ? RobotConfig.Drive.PRECISION_SCALE
-                : RobotConfig.Drive.NORMAL_SCALE;
+                : RobotConfig.Drive.NORMAL_DRIVE_POWER_LIMIT;
     }
 
     public void setMovement(double forward, double strafe, double turn) {
