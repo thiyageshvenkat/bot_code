@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.control.Superstructure;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.firstinspires.ftc.teamcode.game.ScoringElement;
@@ -61,9 +62,15 @@ abstract class BiobuzzTeleOpBase extends OpMode {
                 gamepad1.right_stick_x);
 
         // Operator intake controls: A/X collect, Y ejects, and releasing them stops the intake.
+        // Capacity enforcement remains off until sensors make the software inventory trustworthy.
         if (gamepad2.a || gamepad2.x) {
-            superstructure.intake.collect();
+            if (isIntakeCapacityLocked()) {
+                superstructure.intake.stop();
+            } else {
+                superstructure.intake.collect();
+            }
         } else if (gamepad2.y) {
+            // Reverse must remain available even when full so the operator can clear an element.
             superstructure.intake.reverse();
         } else {
             superstructure.intake.stop();
@@ -84,6 +91,12 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         drivetrain.periodic();
         superstructure.periodic();
         publishTelemetry();
+    }
+
+    /** Returns true when sensor-backed inventory says collection must stop at capacity. */
+    private boolean isIntakeCapacityLocked() {
+        return RobotConfig.Intake.ENFORCE_INVENTORY_CAPACITY
+                && superstructure.inventory.isFull();
     }
 
     /**
@@ -135,6 +148,7 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Inventory", superstructure.inventory.snapshot());
         telemetry.addData("Intake", superstructure.intake.getState());
+        telemetry.addData("Intake capacity lockout", isIntakeCapacityLocked());
         telemetry.addData("Shooter RPM", "%s | actual: %.0f | target: %.0f",
                 superstructure.shooter.getState(), superstructure.shooter.getSpeedRpm(),
                 superstructure.shooter.getTargetRpm());

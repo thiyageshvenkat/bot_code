@@ -45,6 +45,9 @@ public final class RobotConfig {
         public static double COLLECT_POWER = 1;
         // TUNE: motor power used to return the newest element to the field.
         public static double REVERSE_POWER = -.75;
+        // Enable only after sensors keep ElementInventory synchronized with the physical robot.
+        // When enabled, collection stops at four elements; reverse remains available for clearing.
+        public static boolean ENFORCE_INVENTORY_CAPACITY = false;
     }
 
     public static final class Shooter {

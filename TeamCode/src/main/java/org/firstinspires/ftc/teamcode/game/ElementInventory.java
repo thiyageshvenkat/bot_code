@@ -34,6 +34,9 @@ public final class ElementInventory {
 
     public synchronized int size() { return elements.size(); }
 
+    /** Returns whether another element would exceed the robot's four-element capacity. */
+    public synchronized boolean isFull() { return elements.size() >= CAPACITY; }
+
     public synchronized ScoringElement peekNext() { return elements.peekFirst(); }
 
     public synchronized List<ScoringElement> snapshot() {

@@ -10,13 +10,16 @@ import org.junit.Test;
 public class ElementInventoryTest {
     @Test public void preservesFeedOrderAndCapsAtFour() {
         ElementInventory inventory = new ElementInventory(AllianceColor.BLUE);
+        assertFalse(inventory.isFull());
         assertTrue(inventory.tryAdd(ScoringElement.POLLEN));
         assertTrue(inventory.tryAdd(ScoringElement.BLUE_NECTAR));
         assertTrue(inventory.tryAdd(ScoringElement.POLLEN));
         assertTrue(inventory.tryAdd(ScoringElement.POLLEN));
+        assertTrue(inventory.isFull());
         assertFalse(inventory.tryAdd(ScoringElement.POLLEN));
         assertEquals(4, inventory.size());
         assertEquals(ScoringElement.POLLEN, inventory.releaseNext());
+        assertFalse(inventory.isFull());
         assertEquals(ScoringElement.BLUE_NECTAR, inventory.releaseNext());
     }
 
