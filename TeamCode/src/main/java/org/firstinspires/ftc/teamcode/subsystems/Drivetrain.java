@@ -13,7 +13,11 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.util.opMode.Bot;
 
 /**
- * A basic drivetrain class. Most methods are just passthroughs of methods in the Follower class.
+ * Controls the robot's drive motors in TeleOp and autonomous.
+ *
+ * In TeleOp, this class converts joystick input into field-centric or robot-centric movement and
+ * applies the selected speed limit. In autonomous, it tells Pedro Pathing which path to follow and
+ * reports whether that path is still running.
  */
 public class Drivetrain extends SubsystemBase {
 
