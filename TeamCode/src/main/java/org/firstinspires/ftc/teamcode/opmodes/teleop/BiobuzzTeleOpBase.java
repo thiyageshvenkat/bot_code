@@ -10,6 +10,10 @@ import org.firstinspires.ftc.teamcode.vision.PollenVision;
 
 /** Shared competition controls; registered red and blue variants provide alliance-safe nectar handling. */
 abstract class BiobuzzTeleOpBase extends OpMode {
+    // Keep this enabled while the robot has no element sensors. Set it to false after sensors
+    // update ElementInventory automatically, unless the drive team still wants manual corrections.
+    private static final boolean MANUAL_INVENTORY_CONTROLS_ENABLED = true;
+
     // The concrete red/blue OpMode supplies this so nectar is recorded for the correct alliance.
     private final AllianceColor alliance;
     protected Drivetrain drivetrain;
@@ -78,12 +82,25 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         publishTelemetry();
     }
 
+    /**
+     * Applies at most one manual inventory edit for each new D-pad press.
+     * Holding a button does not repeatedly edit the inventory because the current button states
+     * are compared with their states from the previous control-loop cycle.
+     *
+     * @param allowNectar false during INIT, when only the pollen preload should be corrected;
+     *                    true after the match starts
+     */
     private void updateInventory(boolean allowNectar) {
-        // D-pad edits are manual bookkeeping until physical element sensors are installed.
+        if (!MANUAL_INVENTORY_CONTROLS_ENABLED) {
+            return;
+        }
+
+        // Read the three manual bookkeeping controls once during this loop cycle.
         boolean pollen = gamepad2.dpad_up;
         boolean nectar = allowNectar && gamepad2.dpad_right;
         boolean remove = gamepad2.dpad_down;
 
+        // A true current state and false previous state means the button was just pressed.
         if (pollen && !previousInventoryAdd) {
             superstructure.inventory.tryAdd(ScoringElement.POLLEN);
         }
@@ -94,6 +111,7 @@ abstract class BiobuzzTeleOpBase extends OpMode {
             superstructure.inventory.rejectNewest();
         }
 
+        // Save the states so a held button is not treated as another press on the next loop.
         previousInventoryAdd = pollen;
         previousNectarAdd = nectar;
         previousInventoryRemove = remove;
