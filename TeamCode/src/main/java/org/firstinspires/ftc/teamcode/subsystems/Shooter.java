@@ -12,12 +12,11 @@ import com.seattlesolvers.solverslib.command.SubsystemBase;
 import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.control.ShotModel;
 
-/** Dual-flywheel hive launcher with speed qualification and timed feeding. */
+/** Single-motor hive launcher with speed qualification and timed feeding. */
 public final class Shooter extends SubsystemBase {
     public enum State { STOPPED, SPINNING, READY, FEEDING }
 
-    private final DcMotorEx leftFlywheel;
-    private final DcMotorEx rightFlywheel;
+    private final DcMotorEx flywheel;
     private final DcMotorEx feeder;
     private final Servo hood;
     private final ElapsedTime stateTimer = new ElapsedTime();
@@ -27,14 +26,11 @@ public final class Shooter extends SubsystemBase {
     private boolean shotCompleted;
 
     public Shooter(HardwareMap hardwareMap) {
-        leftFlywheel = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.LEFT_FLYWHEEL);
-        rightFlywheel = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.RIGHT_FLYWHEEL);
+        flywheel = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.FLYWHEEL);
         feeder = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.FEEDER);
         hood = hardwareMap.get(Servo.class, RobotConfig.Shooter.HOOD);
 
-        configureFlywheel(leftFlywheel, DcMotorSimple.Direction.FORWARD);
-        configureFlywheel(rightFlywheel, RobotConfig.Shooter.RIGHT_FLYWHEEL_REVERSED
-                ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+        configureFlywheel(flywheel, DcMotorSimple.Direction.FORWARD);
         feeder.setDirection(RobotConfig.Shooter.FEEDER_REVERSED
                 ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
         feeder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -46,8 +42,7 @@ public final class Shooter extends SubsystemBase {
         if (solution == null) return;
         targetVelocity = Math.max(0.0, solution.flywheelVelocity);
         hood.setPosition(Range.clip(solution.hoodPosition, 0.0, 1.0));
-        leftFlywheel.setVelocity(targetVelocity);
-        rightFlywheel.setVelocity(targetVelocity);
+        flywheel.setVelocity(targetVelocity);
         if (state == State.STOPPED) {
             state = State.SPINNING;
             stateTimer.reset();
@@ -63,8 +58,7 @@ public final class Shooter extends SubsystemBase {
     }
 
     public void stop() {
-        leftFlywheel.setPower(0);
-        rightFlywheel.setPower(0);
+        flywheel.setPower(0);
         feeder.setPower(0);
         hood.setPosition(RobotConfig.Shooter.HOOD_STOW);
         targetVelocity = 0.0;
@@ -73,8 +67,7 @@ public final class Shooter extends SubsystemBase {
 
     public State getState() { return state; }
     public double getTargetVelocity() { return targetVelocity; }
-    public double getLeftVelocity() { return leftFlywheel.getVelocity(); }
-    public double getRightVelocity() { return rightFlywheel.getVelocity(); }
+    public double getVelocity() { return flywheel.getVelocity(); }
 
     public boolean consumeShotCompleted() {
         boolean completed = shotCompleted;
@@ -86,9 +79,7 @@ public final class Shooter extends SubsystemBase {
     public void periodic() {
         if (state == State.STOPPED) return;
 
-        boolean atSpeed = Math.abs(leftFlywheel.getVelocity() - targetVelocity)
-                <= RobotConfig.Shooter.VELOCITY_TOLERANCE_TPS
-                && Math.abs(rightFlywheel.getVelocity() - targetVelocity)
+        boolean atSpeed = Math.abs(flywheel.getVelocity() - targetVelocity)
                 <= RobotConfig.Shooter.VELOCITY_TOLERANCE_TPS;
 
         if (state == State.SPINNING) {

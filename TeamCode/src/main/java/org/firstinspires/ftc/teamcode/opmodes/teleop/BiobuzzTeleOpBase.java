@@ -80,9 +80,9 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Inventory", superstructure.inventory.snapshot());
         telemetry.addData("Intake", superstructure.intake.getState());
-        telemetry.addData("Shooter", "%s %.0f/%.0f -> %.0f",
-                superstructure.shooter.getState(), superstructure.shooter.getLeftVelocity(),
-                superstructure.shooter.getRightVelocity(), superstructure.shooter.getTargetVelocity());
+        telemetry.addData("Shooter", "%s %.0f -> %.0f",
+                superstructure.shooter.getState(), superstructure.shooter.getVelocity(),
+                superstructure.shooter.getTargetVelocity());
         telemetry.addData("Limelight", superstructure.vision.isConnected());
         telemetry.addData("Pollen", target == null ? "not visible"
                 : String.format("%.1f deg, %.2f%%", target.bearingDegrees, target.areaPercent));

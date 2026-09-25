@@ -22,9 +22,9 @@ public final class RobotConfig {
 
     public static final class Shooter {
         private Shooter() {}
-        public static final String LEFT_FLYWHEEL = "flywheel_left", RIGHT_FLYWHEEL = "flywheel_right";
+        public static final String FLYWHEEL = "flywheel_left";
         public static final String FEEDER = "feeder", HOOD = "hood";
-        public static boolean RIGHT_FLYWHEEL_REVERSED = true, FEEDER_REVERSED = false;
+        public static boolean FEEDER_REVERSED = false;
         public static double DEFAULT_VELOCITY_TPS = 1850, VELOCITY_TOLERANCE_TPS = 75;
         public static double READY_HOLD_SECONDS = .12, FEED_POWER = .85, FEED_SECONDS = .18;
         public static double HOOD_STOW = .16, HOOD_NEAR = .43, HOOD_FAR = .62; // TUNE
