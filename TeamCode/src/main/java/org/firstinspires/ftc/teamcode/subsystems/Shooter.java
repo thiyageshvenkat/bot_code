@@ -60,7 +60,8 @@ public final class Shooter extends SubsystemBase {
         configureFlywheel(rightFlywheel,
                 directionFromReversedSetting(RobotConfig.Shooter.RIGHT_FLYWHEEL_REVERSED));
 
-        // The feeder has no position or pollen sensor, so it runs open-loop for a tuned duration.
+        // There is no feedback from the feeder: the code applies a fixed power for a tuned amount
+        // of time, then assumes the CAD moved one pollen into the flywheel.
         feeder.setDirection(directionFromReversedSetting(RobotConfig.Shooter.FEEDER_REVERSED));
         feeder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         feeder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -140,10 +141,12 @@ public final class Shooter extends SubsystemBase {
     }
 
     /**
-     * Advances the launcher state machine once per robot-control loop. Superstructure calls this
-     * method from both TeleOp and autonomous; without that call, readiness and feeder timing would
-     * never advance. This method monitors work started by prepare() or requestFeed() rather than
-     * independently deciding to shoot.
+     * Rechecks the shooter during every robot-control loop after another method starts it.
+     * While SPINNING, it reads both motor encoders and changes to READY only after both motors have
+     * remained near the target RPM. While READY, it returns to SPINNING if either motor slows down.
+     * While FEEDING, it stops the feeder when its timed pulse ends and reports that pulse so the
+     * software inventory can remove one assumed pollen. It never starts a shot by itself.
+     * Superstructure must call this repeatedly in both TeleOp and autonomous.
      */
     @Override
     public void periodic() {
@@ -152,16 +155,16 @@ public final class Shooter extends SubsystemBase {
             return;
         }
 
-        boolean atSpeed = bothFlywheelMotorsAreAtTargetSpeed();
+        boolean bothMotorsAtSpeed = bothFlywheelMotorsAreAtTargetSpeed();
 
         if (state == State.SPINNING) {
             // READY requires continuous time within tolerance, not one lucky encoder reading.
-            if (!atSpeed) {
+            if (!bothMotorsAtSpeed) {
                 stateTimer.reset();
             } else if (stateTimer.seconds() >= RobotConfig.Shooter.READY_HOLD_SECONDS) {
                 state = State.READY;
             }
-        } else if (state == State.READY && !atSpeed) {
+        } else if (state == State.READY && !bothMotorsAtSpeed) {
             // Revoke readiness if either motor slows before the feeder is requested.
             state = State.SPINNING;
             stateTimer.reset();
