@@ -10,9 +10,9 @@ import org.firstinspires.ftc.teamcode.vision.PollenVision;
 
 /** Shared competition controls; registered red and blue variants provide alliance-safe nectar handling. */
 abstract class BiobuzzTeleOpBase extends OpMode {
-    // Keep this enabled while the robot has no element sensors. Set it to false after sensors
-    // update ElementInventory automatically, unless the drive team still wants manual corrections.
-    private static final boolean MANUAL_INVENTORY_CONTROLS_ENABLED = true;
+    // Manual counting cannot reliably follow a fast intake and shooter, so it stays disabled.
+    // Keep this false when sensors later update ElementInventory automatically.
+    private static final boolean MANUAL_INVENTORY_CONTROLS_ENABLED = false;
 
     // The concrete red/blue OpMode supplies this so nectar is recorded for the correct alliance.
     private final AllianceColor alliance;
@@ -37,7 +37,11 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         superstructure = new Superstructure(hardwareMap, alliance);
         superstructure.seedPreloadPollen();
         telemetry.addLine("BIOBUZZ initialized");
-        telemetry.addLine("During INIT: operator dpad up/down corrects preload inventory");
+        if (MANUAL_INVENTORY_CONTROLS_ENABLED) {
+            telemetry.addLine("During INIT: operator dpad up/down corrects preload inventory");
+        } else {
+            telemetry.addLine("Manual inventory controls disabled; sensor tracking pending");
+        }
     }
 
     @Override
