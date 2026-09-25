@@ -21,24 +21,21 @@ import org.firstinspires.ftc.teamcode.util.opMode.Bot;
  */
 public class Drivetrain extends SubsystemBase {
 
+    // Pedro's Follower owns both drive output and Pinpoint localization, so this class keeps one
+    // shared instance instead of creating separate controllers for TeleOp and autonomous.
     private final Follower follower;
 
+    // Field-centric is the default because stick directions then stay fixed to the field.
     private boolean isRobotCentric = false;
+    // The driver can temporarily replace the full-power limit with the precision-mode limit.
     private double speedScale = RobotConfig.Drive.NORMAL_DRIVE_POWER_LIMIT;
 
     /**
-     * Every {@code Subsystem} should take only the {@code HardwareMap} into its constructor.
-     * If the subsystem relies on anything else such as a {@code Follower} or another
-     * {@code Subsystem}, that logic should be executed within {@code Command}s (except
-     * the {@code Drivetrain} class, which uses the {@code Follower}).
-     * <p>
-     *     The general rule of thumb is that the {@code Subsystem} classes should only take care of
-     *     itself. It should be able to be created and function without relying on anything else.
-     *     For example, a {@code Turret} should not require a {@code Drivetrain} to be created. The
-     *     {@code Turret} class should just focus on being able to move the turret to whatever angle
-     *     it is told to.
-     * </p>
-     * @param hardwareMap the hardware map for getting hardware
+     * Reuses a Follower supplied by the template's Bot runtime when one exists; otherwise creates
+     * the BIOBUZZ-configured Follower. Reuse prevents two objects from commanding the same motors
+     * or independently tracking the same Pinpoint pose.
+     *
+     * @param hardwareMap active FTC hardware configuration used when a Follower must be created
      */
     public Drivetrain(HardwareMap hardwareMap) {
         if (Bot.follower != null) {
@@ -48,22 +45,32 @@ public class Drivetrain extends SubsystemBase {
         }
     }
 
+    /** Selects Pedro's manual-drive mode before TeleOp begins sending joystick commands. */
     public void startTeleOp() {
         follower.manual(0, 0, 0);
     }
+
+    /** Clears any previous manual or path command before autonomous chooses its first path. */
     public void startAuto() {
         follower.stop();
     }
 
+    /** Makes forward/strafe relative to the robot's current facing direction. */
     public void driveRobotCentric() { isRobotCentric = true; }
+
+    /** Makes forward/strafe relative to the field, independent of robot heading. */
     public void driveFieldCentric() { isRobotCentric = false; }
 
+    /** Chooses between the driver-controlled full-speed and precision-speed limits. */
     public void setPrecisionMode(boolean enabled) {
-        speedScale = enabled
-                ? RobotConfig.Drive.PRECISION_SCALE
-                : RobotConfig.Drive.NORMAL_DRIVE_POWER_LIMIT;
+        if (enabled) {
+            speedScale = RobotConfig.Drive.PRECISION_SCALE;
+        } else {
+            speedScale = RobotConfig.Drive.NORMAL_DRIVE_POWER_LIMIT;
+        }
     }
 
+    /** Applies deadband, fine-control shaping, and the active speed limit to raw stick values. */
     public void setMovement(double forward, double strafe, double turn) {
         applyMovement(shape(forward) * speedScale, shape(strafe) * speedScale,
                 shape(turn) * speedScale);
@@ -73,45 +80,56 @@ public class Drivetrain extends SubsystemBase {
         if (isRobotCentric) {
             follower.manual(forward, strafe, turn);
         } else {
+            // Pedro uses the Pinpoint heading to rotate field directions into robot motor commands.
             follower.manual(ManualDrive.fieldCentric(
                     forward, strafe, turn, follower.pose().heading()));
         }
     }
 
+    /** Gives autonomous path control to Pedro until the path completes or stop() is called. */
     public void followPath(Path path) {
         follower.follow(path);
     }
 
+    /** Uses Pedro's position controller to resist movement from the robot's current pose. */
     public void holdCurrentPose() {
         follower.hold(follower.pose());
     }
 
+    /** Cancels manual/path control and commands the drivetrain to stop. */
     public void stop() {
         follower.stop();
     }
 
+    /** Lets autonomous wait for Pedro to finish the active path or pose hold. */
     public boolean isBusy() {
         return follower.isBusy();
     }
 
+    /** Establishes the field pose from which Pinpoint localization and paths will continue. */
     public void setPose(Pose pose) {
         follower.setPose(pose);
     }
 
-
-
+    /** Provides the latest Pinpoint-based field pose for telemetry and autonomous decisions. */
     public Pose getPose() {
         return follower.pose();
     }
 
+    /**
+     * Must run every OpMode loop so Pedro can refresh localization and calculate new motor output.
+     */
     @Override
     public void periodic() {
         follower.update();
     }
 
+    /** Removes stick drift, restores the remaining range, then cubes it for finer low-speed input. */
     private static double shape(double input) {
         double clipped = Range.clip(input, -1.0, 1.0);
-        if (Math.abs(clipped) <= RobotConfig.Drive.STICK_DEADBAND) return 0.0;
+        if (Math.abs(clipped) <= RobotConfig.Drive.STICK_DEADBAND) {
+            return 0.0;
+        }
         double normalized = (Math.abs(clipped) - RobotConfig.Drive.STICK_DEADBAND)
                 / (1.0 - RobotConfig.Drive.STICK_DEADBAND);
         return Math.copySign(normalized * normalized * normalized, clipped);
