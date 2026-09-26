@@ -6,6 +6,10 @@ import com.pedropathing.controllers.Controller;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Vector2D;
+import com.pedropathing.localization.Localizer;
+import com.pedropathing.localization.MotionState;
+import com.pedropathing.math.Pose;
+import com.pedropathing.math.Velocity;
 import com.pedropathing.revhub.drivetrains.Mecanum;
 import com.pedropathing.revhub.drivetrains.MecanumConfig;
 import com.pedropathing.revhub.localizers.PinpointConfig;
@@ -63,9 +67,46 @@ public final class Constants {
     });
 
     public static Follower create(HardwareMap hardwareMap) {
+        Localizer localizer;
+        try {
+            if (hardwareMap.tryGet(GoBildaPinpointDriver.class, localizerConfig.name.get()) != null) {
+                localizer = new PinpointLocalizer(hardwareMap, localizerConfig);
+            } else {
+                localizer = new DummyLocalizer();
+            }
+        } catch (RuntimeException exception) {
+            localizer = new DummyLocalizer();
+        }
+
         return new Follower(
-                new PinpointLocalizer(hardwareMap, localizerConfig),
+                localizer,
                 new Mecanum(hardwareMap, drivetrainConfig),
                 new Foresight(foresightConfig));
+    }
+
+    /**
+     * Fallback fixed pose used when Pinpoint is absent from the hardware configuration or cannot
+     * initialize. It supports robot-centric TeleOp only; Drivetrain blocks autonomous paths.
+     */
+    public static class DummyLocalizer implements Localizer {
+        private MotionState motionState = MotionState.zero();
+
+        @Override
+        public void setPose(Pose pose) {
+            motionState = MotionState.ofVelocity(pose, Velocity.zero());
+        }
+
+        @Override
+        public MotionState state() {
+            return motionState;
+        }
+
+        @Override
+        public void update() {}
+
+        @Override
+        public void reset() {
+            motionState = MotionState.zero();
+        }
     }
 }

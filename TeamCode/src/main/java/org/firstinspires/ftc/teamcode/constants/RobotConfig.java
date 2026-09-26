@@ -39,8 +39,12 @@ public final class RobotConfig {
     public static final class Intake {
         private Intake() {}
 
-        // REV configuration name for the intake motor.
-        public static final String MOTOR = "intake";
+        // REV configuration name for the left intake motor.
+        public static final String LEFT_MOTOR = "intake_left";
+        // REV configuration name for the right intake motor.
+        public static final String RIGHT_MOTOR = "intake_right";
+        // VERIFY: change this only if equal positive power makes the two installed rollers fight.
+        public static boolean RIGHT_MOTOR_REVERSED = false;
         // TUNE: motor power used to pull a scoring element into the robot.
         public static double COLLECT_POWER = 1;
         // TUNE: motor power used to return the newest element to the field.

@@ -24,7 +24,8 @@ The following names must match exactly. Change the REV configuration or the corr
 | [ ] | `back_left_motor` | back-left mecanum motor | `Drive.BACK_LEFT` |
 | [ ] | `back_right_motor` | back-right mecanum motor | `Drive.BACK_RIGHT` |
 | [ ] | `pinpoint` | goBILDA Pinpoint computer | `Drive.PINPOINT` |
-| [ ] | `intake` | intake motor | `Intake.MOTOR` |
+| [ ] | `intake_left` | left intake motor | `Intake.LEFT_MOTOR` |
+| [ ] | `intake_right` | right intake motor | `Intake.RIGHT_MOTOR` |
 | [ ] | `flywheel_left` | left motor on shared flywheel | `Shooter.LEFT_FLYWHEEL` |
 | [ ] | `flywheel_right` | right motor on shared flywheel | `Shooter.RIGHT_FLYWHEEL` |
 | [ ] | `feeder` | shooter feeder motor | `Shooter.FEEDER` |

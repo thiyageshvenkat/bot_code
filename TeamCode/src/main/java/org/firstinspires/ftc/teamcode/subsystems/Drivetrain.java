@@ -24,6 +24,8 @@ public class Drivetrain extends SubsystemBase {
     // Pedro's Follower owns both drive output and Pinpoint localization, so this class keeps one
     // shared instance instead of creating separate controllers for TeleOp and autonomous.
     private final Follower follower;
+    // Manual robot-centric driving can work without position tracking; autonomous paths cannot.
+    private final boolean positionTrackingAvailable;
 
     // Field-centric is the default because stick directions then stay fixed to the field.
     private boolean isRobotCentric = false;
@@ -43,6 +45,8 @@ public class Drivetrain extends SubsystemBase {
         } else {
             follower = Constants.create(hardwareMap);
         }
+        positionTrackingAvailable = !(follower.localizer instanceof Constants.DummyLocalizer);
+        isRobotCentric = !positionTrackingAvailable;
     }
 
     /** Selects Pedro's manual-drive mode before TeleOp begins sending joystick commands. */
@@ -50,8 +54,13 @@ public class Drivetrain extends SubsystemBase {
         follower.manual(0, 0, 0);
     }
 
-    /** Clears any previous manual or path command before autonomous chooses its first path. */
+    /**
+     * Stops initialization if autonomous has no real position measurement.
+     * A fixed zero pose is sufficient for robot-centric TeleOp motor control, but using it for a
+     * path would make Pedro command movement without knowing whether the robot actually moved.
+     */
     public void startAuto() {
+        requirePositionTracking();
         follower.stop();
     }
 
@@ -59,7 +68,12 @@ public class Drivetrain extends SubsystemBase {
     public void driveRobotCentric() { isRobotCentric = true; }
 
     /** Makes forward/strafe relative to the field, independent of robot heading. */
-    public void driveFieldCentric() { isRobotCentric = false; }
+    public void driveFieldCentric() {
+        // Without Pinpoint there is no measured heading, so remain safely robot-centric.
+        if (positionTrackingAvailable) {
+            isRobotCentric = false;
+        }
+    }
 
     /** Chooses between the driver-controlled full-speed and precision-speed limits. */
     public void setPrecisionMode(boolean enabled) {
@@ -93,11 +107,13 @@ public class Drivetrain extends SubsystemBase {
 
     /** Gives autonomous path control to Pedro until the path completes or stop() is called. */
     public void followPath(Path path) {
+        requirePositionTracking();
         follower.follow(path);
     }
 
     /** Uses Pedro's position controller to resist movement from the robot's current pose. */
     public void holdCurrentPose() {
+        requirePositionTracking();
         follower.hold(follower.pose());
     }
 
@@ -121,12 +137,27 @@ public class Drivetrain extends SubsystemBase {
         return follower.pose();
     }
 
+    /** Returns whether Pinpoint is available for field-centric driving and autonomous paths. */
+    public boolean isPositionTrackingAvailable() {
+        return positionTrackingAvailable;
+    }
+
     /**
      * Must run every OpMode loop so Pedro can refresh localization and calculate new motor output.
      */
     @Override
     public void periodic() {
         follower.update();
+    }
+
+    /** Prevents autonomous movement from using the fallback pose that never changes. */
+    private void requirePositionTracking() {
+        if (!positionTrackingAvailable) {
+            follower.stop();
+            throw new IllegalStateException(
+                    "Autonomous movement requires the Pinpoint device named '"
+                            + RobotConfig.Drive.PINPOINT + "'.");
+        }
     }
 
     /** Removes stick drift, restores the remaining range, then cubes it for finer low-speed input. */

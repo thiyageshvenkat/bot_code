@@ -13,12 +13,15 @@ calibrated or field-tested on the physical robot. Treat every value marked
 | `back_left_motor` | mecanum drive motor |
 | `back_right_motor` | mecanum drive motor |
 | `pinpoint` | goBILDA Pinpoint odometry computer |
-| `intake` | single intake motor |
+| `intake_left`, `intake_right` | two intake motors controlled together |
 | `flywheel_left`, `flywheel_right` | encoder-equipped launcher motors |
 | `feeder` | launcher feeder motor |
 | `hood` | launcher angle servo |
 | `limelight` | required launcher-aligned Limelight 3A running the Hive AprilTag pipeline |
 | `pollen_limelight` | optional second Limelight 3A running the pollen detector |
+
+`Drivebase Only TeleOp` can run robot-centric without `pinpoint`. Autonomous path following and
+field-centric driving remain disabled until Pinpoint initializes successfully.
 
 The original `limelight` name is deliberately retained for the required Hive camera. If
 `pollen_limelight` is absent, pollen detection reports unavailable while Hive targeting continues
