@@ -15,8 +15,8 @@ import java.util.List;
 /**
  * Provides the two vision results used by the robot.
  *
- * <p>The required launcher-aligned Limelight detects Hive AprilTags. The optional second Limelight
- * detects pollen. If the pollen camera is not installed, Hive targeting continues normally.</p>
+ * <p>The launcher-aligned Limelight detects Hive AprilTags and is required by autonomous but
+ * optional in TeleOp. The optional second Limelight detects pollen.</p>
  */
 public final class BiobuzzVision implements AutoCloseable {
     /** Fixed field side occupied by the detected Cell; this does not change with robot alliance. */
@@ -57,17 +57,28 @@ public final class BiobuzzVision implements AutoCloseable {
         }
     }
 
-    // Always present and permanently assigned to the 3D Hive AprilTag pipeline.
+    // Null only in modes that explicitly allow the Hive camera to be absent.
     private final LimelightReader hiveCamera;
     // Null when the optional second Limelight is absent from the active Robot Configuration.
     private final LimelightReader pollenCamera;
 
     public BiobuzzVision(HardwareMap hardwareMap) {
-        // A missing Hive camera stops initialization because autonomous needs it for aiming.
-        Limelight3A requiredHiveCamera = hardwareMap.get(
-                Limelight3A.class, RobotConfig.Vision.HIVE_LIMELIGHT);
-        hiveCamera = new LimelightReader(
-                requiredHiveCamera, RobotConfig.Vision.HIVE_APRILTAG_PIPELINE);
+        this(hardwareMap, true);
+    }
+
+    /** Creates vision for TeleOp without making an absent advisory Hive camera fail INIT. */
+    public static BiobuzzVision optionalForTeleOp(HardwareMap hardwareMap) {
+        return new BiobuzzVision(hardwareMap, false);
+    }
+
+    private BiobuzzVision(HardwareMap hardwareMap, boolean requireHiveCamera) {
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
+        Limelight3A configuredHiveCamera = requireHiveCamera
+                ? hardwareMap.get(Limelight3A.class, RobotConfig.Vision.HIVE_LIMELIGHT)
+                : hardwareMap.tryGet(Limelight3A.class, RobotConfig.Vision.HIVE_LIMELIGHT);
+        hiveCamera = configuredHiveCamera == null ? null
+                : new LimelightReader(
+                        configuredHiveCamera, RobotConfig.Vision.HIVE_APRILTAG_PIPELINE);
 
         // The robot continues without pollen detection when the second Limelight is not installed.
         Limelight3A optionalPollenCamera = hardwareMap.tryGet(
@@ -118,7 +129,7 @@ public final class BiobuzzVision implements AutoCloseable {
      * @return the estimated Cell opening, or null when no current usable estimate exists
      */
     public HiveTarget findUpwardCellOpening(AllianceColor alliance) {
-        if (alliance == null) {
+        if (alliance == null || hiveCamera == null) {
             return null;
         }
         LLResult result = hiveCamera.getLatestUsableResult();
@@ -140,9 +151,14 @@ public final class BiobuzzVision implements AutoCloseable {
         return HiveTagGeometry.combineMatchingTagEstimates(tagEstimates);
     }
 
-    /** Reports the required camera connection separately from whether it currently sees a tag. */
+    /** Distinguishes an absent optional TeleOp camera from a disconnected installed camera. */
+    public boolean isHiveCameraInstalled() {
+        return hiveCamera != null;
+    }
+
+    /** Reports camera connection separately from whether it currently sees a tag. */
     public boolean isHiveCameraConnected() {
-        return hiveCamera.isConnected();
+        return hiveCamera != null && hiveCamera.isConnected();
     }
 
     /** Distinguishes an intentionally absent pollen camera from a disconnected installed camera. */
@@ -158,7 +174,9 @@ public final class BiobuzzVision implements AutoCloseable {
     @Override
     public void close() {
         // FTC can stop an OpMode at any time; stop both cameras and their pipeline request threads.
-        hiveCamera.close();
+        if (hiveCamera != null) {
+            hiveCamera.close();
+        }
         if (pollenCamera != null) {
             pollenCamera.close();
         }

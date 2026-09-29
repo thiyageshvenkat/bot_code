@@ -33,9 +33,11 @@ abstract class BiobuzzTeleOpBase extends OpMode {
     @Override
     public void init() {
         // FTC calls init once after the driver selects this OpMode.
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
         drivetrain = new Drivetrain(hardwareMap);
         drivetrain.startTeleOp();
-        superstructure = new Superstructure(hardwareMap, alliance);
+        // Hive vision is useful telemetry here, but an absent camera must not prevent driving.
+        superstructure = Superstructure.forTeleOp(hardwareMap, alliance);
         // TeleOp does not start with a guaranteed four pollen: Auto may have already fired them.
         // Leave this unknown count empty; it will not block sensorless driver-requested feeding.
         telemetry.addLine("BIOBUZZ initialized");
@@ -57,6 +59,7 @@ abstract class BiobuzzTeleOpBase extends OpMode {
 
     @Override
     public void loop() {
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
         // Driver controls: left stick translates, right stick turns, and right trigger slows the drive.
         drivetrain.setPrecisionMode(gamepad1.right_trigger > 0.4);
         if (gamepad1.a) {
@@ -179,7 +182,8 @@ abstract class BiobuzzTeleOpBase extends OpMode {
                 superstructure.shooter.getState(), superstructure.shooter.getLeftSpeedRpm(),
                 superstructure.shooter.getRightSpeedRpm(),
                 superstructure.shooter.getTargetRpm());
-        telemetry.addData("Hive Limelight connected",
+        telemetry.addData("Hive Limelight installed/connected", "%s/%s",
+                superstructure.vision.isHiveCameraInstalled(),
                 superstructure.vision.isHiveCameraConnected());
         telemetry.addData("Pollen Limelight installed/connected", "%s/%s",
                 superstructure.vision.isPollenCameraInstalled(),

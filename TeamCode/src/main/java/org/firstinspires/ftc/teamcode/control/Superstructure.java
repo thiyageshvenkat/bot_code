@@ -24,15 +24,27 @@ public final class Superstructure implements AutoCloseable {
     public final BiobuzzVision vision;
 
     /**
-     * Creates the mechanisms that competition TeleOp and autonomous use together. Consequently,
-     * every named device for intake, shooter, hood, feeder, and Limelight must exist in the active
-     * REV configuration even if a particular test intends to operate only one of them.
+     * Creates all mechanisms with the Hive camera required. Autonomous uses this form because it
+     * cannot safely aim without that camera; TeleOp uses {@link #forTeleOp} instead.
      */
     public Superstructure(HardwareMap hardwareMap, AllianceColor alliance) {
+        this(hardwareMap, alliance, true);
+    }
+
+    /** Creates TeleOp mechanisms while allowing its advisory Hive camera to be absent. */
+    public static Superstructure forTeleOp(HardwareMap hardwareMap, AllianceColor alliance) {
+        return new Superstructure(hardwareMap, alliance, false);
+    }
+
+    private Superstructure(
+            HardwareMap hardwareMap, AllianceColor alliance, boolean requireHiveCamera) {
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
         inventory = new ElementInventory(alliance);
         intake = new Intake(hardwareMap);
         shooter = new Shooter(hardwareMap);
-        vision = new BiobuzzVision(hardwareMap);
+        vision = requireHiveCamera
+                ? new BiobuzzVision(hardwareMap)
+                : BiobuzzVision.optionalForTeleOp(hardwareMap);
     }
 
     /**

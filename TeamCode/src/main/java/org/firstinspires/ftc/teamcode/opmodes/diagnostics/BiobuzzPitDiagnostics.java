@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes.diagnostics;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.control.ShotModel;
 import org.firstinspires.ftc.teamcode.control.Superstructure;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
@@ -17,17 +18,20 @@ public final class BiobuzzPitDiagnostics extends OpMode {
 
     @Override
     public void init() {
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
         drivetrain = new Drivetrain(hardwareMap);
         drivetrain.startTeleOp();
         drivetrain.driveRobotCentric();
         drivetrain.setPrecisionMode(true);
-        superstructure = new Superstructure(hardwareMap, AllianceColor.RED);
+        // Diagnostics should report missing cameras instead of refusing to test other hardware.
+        superstructure = Superstructure.forTeleOp(hardwareMap, AllianceColor.RED);
         telemetry.addLine("PIT ONLY: lift robot and clear intake/launcher");
         telemetry.addLine("Hold gamepad2 START to power hardware");
     }
 
     @Override
     public void loop() {
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
         boolean armed = gamepad2.start;
         double forward = 0;
         double strafe = 0;
@@ -47,7 +51,8 @@ public final class BiobuzzPitDiagnostics extends OpMode {
             superstructure.intake.stop();
         }
         if (armed && gamepad2.right_bumper) {
-            superstructure.shooter.prepare(ShotModel.forDistance(30.0));
+            superstructure.shooter.prepare(
+                    ShotModel.forDistance(RobotConfig.Shooter.NEAR_DISTANCE_IN));
         } else {
             superstructure.shooter.stop();
         }
@@ -64,7 +69,8 @@ public final class BiobuzzPitDiagnostics extends OpMode {
         telemetry.addData("Flywheel motors", "left: %.0f RPM | right: %.0f RPM",
                 superstructure.shooter.getLeftSpeedRpm(),
                 superstructure.shooter.getRightSpeedRpm());
-        telemetry.addData("Hive Limelight connected",
+        telemetry.addData("Hive Limelight installed/connected", "%s/%s",
+                superstructure.vision.isHiveCameraInstalled(),
                 superstructure.vision.isHiveCameraConnected());
         telemetry.addData("Pollen Limelight installed/connected", "%s/%s",
                 superstructure.vision.isPollenCameraInstalled(),
