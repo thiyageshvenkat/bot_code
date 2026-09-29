@@ -5,6 +5,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 
 import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,6 +21,9 @@ final class LimelightReader implements AutoCloseable {
     private static final int CAMERA_POLL_RATE_HZ = 50;
     // Wait half a second between failed pipeline requests instead of sending one every robot loop.
     private static final long PIPELINE_RETRY_DELAY_NANOS = 500_000_000L;
+    // FTC SDK 12 gives Limelight POST requests a 15-second read timeout. Stop waiting one second
+    // later so this reader cannot retain a permanently unfinished request if that behavior changes.
+    private static final long PIPELINE_REQUEST_TIMEOUT_NANOS = 16_000_000_000L;
 
     // Physical Limelight owned by this reader.
     private final Limelight3A camera;
@@ -28,13 +32,15 @@ final class LimelightReader implements AutoCloseable {
     // Remembers camera timestamps so a frozen image eventually becomes unusable.
     private final LatestCameraFrameCheck latestFrameCheck = new LatestCameraFrameCheck();
     // A pipeline request can time out, so it runs separately from drivetrain and shooter updates.
-    private final ExecutorService pipelineSelectionThread = Executors.newSingleThreadExecutor();
+    private ExecutorService pipelineSelectionThread = Executors.newSingleThreadExecutor();
     // False until Limelight confirms that it accepted the requested pipeline number.
     private boolean pipelineSelectionConfirmed;
     // Earliest time another failed pipeline request may be sent.
     private long nextPipelineRequestTimeNanos;
     // Current pipeline request, or null when no request is waiting or running.
     private Future<Boolean> pipelineSelectionRequest;
+    // Used only to stop waiting for an abnormally long pipeline-switch request.
+    private long pipelineSelectionRequestStartNanos;
 
     /** Configures polling, starts the camera, and requests its one assigned pipeline. */
     LimelightReader(Limelight3A camera, int pipeline) {
@@ -80,12 +86,30 @@ final class LimelightReader implements AutoCloseable {
     }
 
     private void checkPipelineSelectionResult() {
-        // Reading Future.get() is safe only after isDone(); otherwise the robot loop could pause.
-        if (pipelineSelectionRequest == null || !pipelineSelectionRequest.isDone()) {
+        if (pipelineSelectionRequest == null) {
             return;
         }
+        if (!pipelineSelectionRequest.isDone()) {
+            if (System.nanoTime() - pipelineSelectionRequestStartNanos
+                    < PIPELINE_REQUEST_TIMEOUT_NANOS) {
+                return;
+            }
+            // Do not let one unfinished request permanently prevent later attempts. The SDK's own
+            // network timeout should release the old worker; replace it so a retry is not queued
+            // behind that request if the old call fails to return after cancellation.
+            pipelineSelectionRequest.cancel(true);
+            pipelineSelectionThread.shutdownNow();
+            pipelineSelectionThread = Executors.newSingleThreadExecutor();
+            pipelineSelectionRequest = null;
+            pipelineSelectionConfirmed = false;
+            nextPipelineRequestTimeNanos = System.nanoTime() + PIPELINE_RETRY_DELAY_NANOS;
+            return;
+        }
+        // Reading Future.get() is safe only after isDone(); otherwise the robot loop could pause.
         try {
             pipelineSelectionConfirmed = pipelineSelectionRequest.get();
+        } catch (CancellationException e) {
+            pipelineSelectionConfirmed = false;
         } catch (ExecutionException e) {
             // Limelight rejected the request or communication failed. A later loop will retry.
             pipelineSelectionConfirmed = false;
@@ -104,6 +128,7 @@ final class LimelightReader implements AutoCloseable {
             // pipelineSwitch communicates with the camera and may take time when it is unplugged.
             pipelineSelectionRequest = pipelineSelectionThread.submit(
                     () -> camera.pipelineSwitch(pipeline));
+            pipelineSelectionRequestStartNanos = now;
             nextPipelineRequestTimeNanos = now + PIPELINE_RETRY_DELAY_NANOS;
         }
     }
