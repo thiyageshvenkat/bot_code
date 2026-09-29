@@ -1,31 +1,45 @@
 package org.firstinspires.ftc.teamcode.constants;
 
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.configurables.annotations.IgnoreConfigurable;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
-/** Hardware names and starting values. Never remove a TUNE marker until that value is measured. */
+/**
+ * Hardware names and starting values. Panels exposes the live-adjustable fields in each section.
+ * Never remove a TUNE marker until that value is measured.
+ */
 public final class RobotConfig {
     private RobotConfig() {}
 
+    @Configurable
     public static final class Drive {
         private Drive() {}
 
         // REV configuration name for the front-left drive motor.
+        @IgnoreConfigurable
         public static final String FRONT_LEFT = "front_left_motor";
         // REV configuration name for the front-right drive motor.
+        @IgnoreConfigurable
         public static final String FRONT_RIGHT = "front_right_motor";
         // REV configuration name for the back-left drive motor.
+        @IgnoreConfigurable
         public static final String BACK_LEFT = "back_left_motor";
         // REV configuration name for the back-right drive motor.
+        @IgnoreConfigurable
         public static final String BACK_RIGHT = "back_right_motor";
         // REV configuration name for the goBILDA Pinpoint odometry computer.
+        @IgnoreConfigurable
         public static final String PINPOINT = "pinpoint";
         // REV configuration name for the Control Hub's built-in orientation sensor.
+        @IgnoreConfigurable
         public static final String CONTROL_HUB_IMU = "imu";
         // VERIFY: the direction the Control Hub logo physically faces on the installed robot.
+        @IgnoreConfigurable
         public static final RevHubOrientationOnRobot.LogoFacingDirection CONTROL_HUB_LOGO_DIRECTION =
                 RevHubOrientationOnRobot.LogoFacingDirection.UP;
         // VERIFY: the direction the Control Hub USB ports physically face on the installed robot.
         // Incorrect directions make field-oriented controls move at the wrong field angle.
+        @IgnoreConfigurable
         public static final RevHubOrientationOnRobot.UsbFacingDirection CONTROL_HUB_USB_DIRECTION =
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
         // TUNE: increase only if an untouched joystick causes motor movement.
@@ -37,24 +51,31 @@ public final class RobotConfig {
         public static double PRECISION_SCALE = .35;
         // TUNE: sideways distance from the robot's rotation center to the forward-tracking
         // Pinpoint pod, in inches. Left of center is positive; right is negative.
+        @IgnoreConfigurable
         public static double PINPOINT_X_OFFSET_IN = 0;
         // TUNE: forward/backward distance from the robot's rotation center to the
         // sideways-tracking Pinpoint pod, in inches. Forward is positive; backward is negative.
+        @IgnoreConfigurable
         public static double PINPOINT_Y_OFFSET_IN = 0;
         // TUNE: maximum Pedro autonomous path speed, from 0.0 to 1.0. Start at 0.35,
         // run ForesightTuner, install its measured values, then raise this gradually toward 1.0.
         // Do not compensate for this safety limit by multiplying controller gains or velocities.
+        @IgnoreConfigurable
         public static double AUTO_PATH_SPEED_LIMIT = .35;
     }
 
+    @Configurable
     public static final class Intake {
         private Intake() {}
 
         // REV configuration name for the left intake motor.
+        @IgnoreConfigurable
         public static final String LEFT_MOTOR = "intake_left";
         // REV configuration name for the right intake motor.
+        @IgnoreConfigurable
         public static final String RIGHT_MOTOR = "intake_right";
         // VERIFY: change this only if equal positive power makes the two installed rollers fight.
+        @IgnoreConfigurable
         public static boolean RIGHT_MOTOR_REVERSED = false;
         // TUNE: motor power used to pull a scoring element into the robot.
         public static double COLLECT_POWER = 1;
@@ -65,21 +86,28 @@ public final class RobotConfig {
         public static boolean ENFORCE_INVENTORY_CAPACITY = false;
     }
 
+    @Configurable
     public static final class Shooter {
         private Shooter() {}
 
         // REV configuration name for the left motor driving the shared shooter flywheel.
+        @IgnoreConfigurable
         public static final String LEFT_FLYWHEEL = "flywheel_left";
         // REV configuration name for the right motor driving the same shooter flywheel.
+        @IgnoreConfigurable
         public static final String RIGHT_FLYWHEEL = "flywheel_right";
         // REV configuration name for the motor that feeds elements into the flywheel.
+        @IgnoreConfigurable
         public static final String FEEDER = "feeder";
         // REV configuration name for the servo that sets the launch angle.
+        @IgnoreConfigurable
         public static final String HOOD = "hood";
         // VERIFY: Rayansh's configuration used false; confirm both motors assist rather than fight
         // each other before testing them while mechanically coupled to the shared flywheel.
+        @IgnoreConfigurable
         public static boolean RIGHT_FLYWHEEL_REVERSED = false;
         // Reverses the feeder direction when its physical installation requires it.
+        @IgnoreConfigurable
         public static boolean FEEDER_REVERSED = false;
         // TUNE: starting shooter speed; distance adjustment raises or lowers this target.
         public static double SHOOTER_BASE_TARGET_RPM = 4000;
@@ -87,6 +115,7 @@ public final class RobotConfig {
         public static double SHOOTER_MAX_READY_ERROR_RPM = 160;
         // VERIFY: both intended 1:1 6000-RPM Yellow Jackets produce 28 encoder ticks per revolution.
         // Confirm the installed motor SKUs and 1:1 connection before relying on displayed RPM.
+        @IgnoreConfigurable
         public static double SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION = 28;
         // TUNE: seconds the shooter must remain within its allowed RPM error before feeding.
         public static double READY_HOLD_SECONDS = .12;
@@ -106,6 +135,7 @@ public final class RobotConfig {
         public static double FAR_DISTANCE_IN = 84;
     }
 
+    @Configurable
     public static final class Vision {
         private Vision() {}
 
@@ -113,15 +143,20 @@ public final class RobotConfig {
         // configuration must contain this camera because autonomous Hive aiming depends on it.
         // Keep the original hardware name so adding the second camera does not break the existing
         // Robot Configuration; this original camera is now permanently assigned to Hive aiming.
+        @IgnoreConfigurable
         public static final String HIVE_LIMELIGHT = "limelight";
         // REV configuration name for the optional Limelight 3A that detects loose pollen. The robot
         // continues with Hive targeting when this name is absent from the active configuration.
+        @IgnoreConfigurable
         public static final String POLLEN_LIMELIGHT = "pollen_limelight";
         // Exact neural-detector label used to identify pollen.
+        @IgnoreConfigurable
         public static final String POLLEN_CLASS = "yellow_pollen";
         // VERIFY: neural-detector pipeline stored on the pollen Limelight.
+        @IgnoreConfigurable
         public static int POLLEN_PIPELINE = 0;
         // VERIFY: use 36h11, 82.55-mm tags and Full 3D on the Hive Limelight. See ROBOT_SETUP.
+        @IgnoreConfigurable
         public static int HIVE_APRILTAG_PIPELINE = 1;
         // TUNE: detections below this confidence, from zero to one, are ignored.
         public static double MIN_CONFIDENCE = .40;
@@ -154,6 +189,7 @@ public final class RobotConfig {
         public static double HIVE_POST_FEED_WAIT_SECONDS = 0;
     }
 
+    @Configurable
     public static final class Auto {
         private Auto() {}
         // TUNE (disabled): path transitions now wait for Pedro to report completion.
