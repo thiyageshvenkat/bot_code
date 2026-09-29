@@ -1,8 +1,13 @@
 package org.firstinspires.ftc.teamcode.auto;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
+import com.pedropathing.math.Pose;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.junit.Test;
 
@@ -34,17 +39,41 @@ public class BiobuzzAutoPlanTest {
             assertNotNull(plan.northHiveToTopFlower);
             assertNotNull(plan.topFlowerToNorthHive);
             assertNotNull(plan.northHiveToLoadingZone);
+            assertSame(plan.startToSouthHive, plan.toShoot);
+            assertNotNull(plan.toPark);
         }
     }
 
     @Test public void suppliedRedEndpointsArePreserved() {
         BiobuzzAutoPlan red = BiobuzzAutoPlan.forAlliance(AllianceColor.RED);
-        assertEquals(56.0, red.start.x(), EPSILON);
-        assertEquals(8.0, red.start.y(), EPSILON);
-        assertEquals(59.25, red.southHiveShoot.x(), EPSILON);
-        assertEquals(42.0, red.southHiveShoot.y(), EPSILON);
-        assertEquals(8.0, red.loadingZonePark.x(), EPSILON);
-        assertEquals(108.0, red.loadingZonePark.y(), EPSILON);
+        assertPose(red.start, 56, 8, 90);
+        assertPose(red.southHiveShoot, 59.25, 42, 90);
+        assertPose(red.gardenCollect, 10, 10, 270);
+        assertPose(red.northApproach, 31.9496, 92.4893, 270);
+        assertPose(red.northCurveExit, 46.6173, 102.9301, 270);
+        assertPose(red.northHiveShoot, 59.25, 102, 270);
+        assertPose(red.topFlowerCollect, 48, 132, 90);
+        assertPose(red.loadingZonePark, 8, 108, 180);
+    }
+
+    @Test public void everyPublicPoseStaysInsideTheFieldWithNormalizedHeading() {
+        for (AllianceColor alliance : AllianceColor.values()) {
+            BiobuzzAutoPlan plan = BiobuzzAutoPlan.forAlliance(alliance);
+            for (Pose pose : poses(plan)) {
+                assertTrue(pose.x() >= 0 && pose.x() <= BiobuzzAutoPlan.FIELD_SIZE_IN);
+                assertTrue(pose.y() >= 0 && pose.y() <= BiobuzzAutoPlan.FIELD_SIZE_IN);
+                assertTrue(pose.heading() >= 0 && pose.heading() < Math.PI * 2);
+            }
+        }
+    }
+
+    @Test public void plansAreIndependentAndNullAllianceIsRejected() {
+        BiobuzzAutoPlan first = BiobuzzAutoPlan.forAlliance(AllianceColor.RED);
+        BiobuzzAutoPlan second = BiobuzzAutoPlan.forAlliance(AllianceColor.RED);
+        assertNotSame(first, second);
+        assertNotSame(first.startToSouthHive, second.startToSouthHive);
+        assertThrows(IllegalArgumentException.class,
+                () -> BiobuzzAutoPlan.forAlliance(null));
     }
 
     private static void assertMirrored(com.pedropathing.math.Pose red,
@@ -54,5 +83,19 @@ public class BiobuzzAutoPlanTest {
         double expected = ((Math.PI - red.heading()) % (2 * Math.PI) + 2 * Math.PI)
                 % (2 * Math.PI);
         assertEquals(expected, blue.heading(), EPSILON);
+    }
+
+    private static void assertPose(Pose actual, double x, double y, double headingDegrees) {
+        assertEquals(x, actual.x(), EPSILON);
+        assertEquals(y, actual.y(), EPSILON);
+        assertEquals(Math.toRadians(headingDegrees), actual.heading(), EPSILON);
+    }
+
+    private static Pose[] poses(BiobuzzAutoPlan plan) {
+        return new Pose[] {
+                plan.start, plan.southHiveShoot, plan.gardenCollect, plan.northApproach,
+                plan.northCurveExit, plan.northHiveShoot, plan.topFlowerCollect,
+                plan.loadingZonePark
+        };
     }
 }

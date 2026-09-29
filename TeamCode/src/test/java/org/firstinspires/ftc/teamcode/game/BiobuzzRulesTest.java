@@ -21,4 +21,22 @@ public class BiobuzzRulesTest {
         assertTrue(red.tryAdd(ScoringElement.RED_NECTAR));
         assertTrue(blue.tryAdd(ScoringElement.POLLEN));
     }
+
+    @Test public void everyElementAllianceCombinationMatchesTheRules() {
+        for (AllianceColor alliance : AllianceColor.values()) {
+            for (ScoringElement element : ScoringElement.values()) {
+                boolean expected = element == ScoringElement.POLLEN
+                        || alliance == AllianceColor.RED && element == ScoringElement.RED_NECTAR
+                        || alliance == AllianceColor.BLUE && element == ScoringElement.BLUE_NECTAR;
+                assertTrue(element + " / " + alliance,
+                        element.belongsTo(alliance) == expected);
+            }
+        }
+    }
+
+    @Test public void noAllianceAcceptsOnlyNeutralPollen() {
+        assertTrue(ScoringElement.POLLEN.belongsTo(null));
+        assertFalse(ScoringElement.RED_NECTAR.belongsTo(null));
+        assertFalse(ScoringElement.BLUE_NECTAR.belongsTo(null));
+    }
 }
