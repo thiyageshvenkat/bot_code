@@ -13,6 +13,7 @@ calibrated or field-tested on the physical robot. Treat every value marked
 | `back_left_motor` | mecanum drive motor |
 | `back_right_motor` | mecanum drive motor |
 | `pinpoint` | goBILDA Pinpoint odometry computer |
+| `imu` | Control Hub built-in IMU used for field-oriented TeleOp without Pinpoint |
 | `intake_left`, `intake_right` | two intake motors controlled together |
 | `flywheel_left`, `flywheel_right` | encoder-equipped launcher motors |
 | `feeder` | launcher feeder motor |
@@ -20,8 +21,9 @@ calibrated or field-tested on the physical robot. Treat every value marked
 | `limelight` | required launcher-aligned Limelight 3A running the Hive AprilTag pipeline |
 | `pollen_limelight` | optional second Limelight 3A running the pollen detector |
 
-`Drivebase Only TeleOp` can run robot-centric without `pinpoint`. Autonomous path following and
-field-centric driving remain disabled until Pinpoint initializes successfully.
+Without `pinpoint`, TeleOp uses the Control Hub IMU for field-oriented driving while autonomous
+paths remain disabled. Set the Control Hub logo and USB facing directions in `RobotConfig` to match
+the physical installation. If neither heading sensor initializes, TeleOp uses robot-centric driving.
 
 The original `limelight` name is deliberately retained for the required Hive camera. If
 `pollen_limelight` is absent, pollen detection reports unavailable while Hive targeting continues
@@ -42,20 +44,22 @@ Auto still tracks the four assumed preloads and cannot feed a fifth one.
    OpMode. A missing required device intentionally prevents initialization.
 3. Run **BIOBUZZ Pit Diagnostics**. Powered checks require holding gamepad 2
    `START`; releasing it stops drive, intake, and shooter.
-4. At low power, verify positive drive, strafe, and turn directions. Correct
-   motor directions in `pedroPathing/Constants.java`, never by swapping gamepad
-   signs until the wheel convention is correct.
-5. On `pollen_limelight`, configure pipeline 0 for the `yellow_pollen` detector. On the
+4. Run **Drivebase Forward Auto Test** in a clear area. It does not require Pinpoint and applies
+   15% forward power for 0.5 seconds before stopping.
+5. At low power, verify forward, stick-right strafe, and stick-right clockwise turn. The confirmed
+   motor directions are all `FORWARD`; `Drivetrain` converts the driver's right-positive controls
+   to Pedro's left-positive coordinate convention.
+6. On `pollen_limelight`, configure pipeline 0 for the `yellow_pollen` detector. On the
    required `limelight`, configure pipeline 1 for 36h11 AprilTags, **82.55 mm (3.25 inch)**
    marker size, and **Full 3D**. The two cameras remain on their own pipelines continuously.
    Confirm the correct own-alliance Hive Cell tag ranges: red 30-37, blue 38-45.
    The pit diagnostic currently displays red targets; use blue Auto INIT for blue checks.
-6. Measure Pinpoint X/Y offsets, encoder directions, track width, wheel radius,
+7. Measure Pinpoint X/Y offsets, encoder directions, track width, wheel radius,
    and motion constraints using the Pedro tuning OpModes.
-7. Determine safe hood endpoints without driving the servo into a hard stop.
-8. Characterize launcher speed and hood angle from multiple measured distances.
+8. Determine safe hood endpoints without driving the servo into a hard stop.
+9. Characterize launcher speed and hood angle from multiple measured distances.
    Replace the two-point `ShotModel` values only after repeatable trials.
-9. Validate the red waypoints imported from
+10. Validate the red waypoints imported from
     `biobuzz_HARDCODED_LINES_WITH_CORNER_CURVE.pp` and the blue mirrored route.
     Test slowly with no scoring elements, then add one preload at a time.
 
@@ -93,6 +97,7 @@ the installed camera firmware, mount, tag-size setting, or actual ballistic accu
 - Left stick: field-centric translation
 - Right stick X: turn
 - Right trigger: precision speed
+- `A`: make the robot's current facing direction the new field-forward direction
 
 ### Operator (gamepad 2)
 

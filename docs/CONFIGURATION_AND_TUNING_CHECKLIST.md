@@ -18,20 +18,20 @@ Record the date, battery voltage, robot revision, and final measured value besid
 The following names must match exactly. Change the REV configuration or the corresponding string in `RobotConfig.java`; do not maintain two different naming schemes.
 
 | Checked | Configuration name | Expected device | Code constant |
-| --- | --- | --- | --- |
-| [ ] | `front_left_motor` | front-left mecanum motor | `Drive.FRONT_LEFT` |
-| [ ] | `front_right_motor` | front-right mecanum motor | `Drive.FRONT_RIGHT` |
-| [ ] | `back_left_motor` | back-left mecanum motor | `Drive.BACK_LEFT` |
-| [ ] | `back_right_motor` | back-right mecanum motor | `Drive.BACK_RIGHT` |
-| [ ] | `pinpoint` | goBILDA Pinpoint computer | `Drive.PINPOINT` |
-| [ ] | `intake_left` | left intake motor | `Intake.LEFT_MOTOR` |
-| [ ] | `intake_right` | right intake motor | `Intake.RIGHT_MOTOR` |
-| [ ] | `flywheel_left` | left motor on shared flywheel | `Shooter.LEFT_FLYWHEEL` |
-| [ ] | `flywheel_right` | right motor on shared flywheel | `Shooter.RIGHT_FLYWHEEL` |
-| [ ] | `feeder` | shooter feeder motor | `Shooter.FEEDER` |
-| [ ] | `hood` | shooter hood servo | `Shooter.HOOD` |
-| [ ] | `limelight` | Required launcher-aligned Limelight 3A | `Vision.HIVE_LIMELIGHT` |
-| [ ] | `pollen_limelight` | Optional pollen-detection Limelight 3A | `Vision.POLLEN_LIMELIGHT` |
+|---------| --- | --- | --- |
+| [x]     | `front_left_motor` | front-left mecanum motor | `Drive.FRONT_LEFT` |
+| [x]     | `front_right_motor` | front-right mecanum motor | `Drive.FRONT_RIGHT` |
+| [x]     | `back_left_motor` | back-left mecanum motor | `Drive.BACK_LEFT` |
+| [x]     | `back_right_motor` | back-right mecanum motor | `Drive.BACK_RIGHT` |
+| [ ]     | `pinpoint` | goBILDA Pinpoint computer | `Drive.PINPOINT` |
+| [ ]     | `intake_left` | left intake motor | `Intake.LEFT_MOTOR` |
+| [ ]     | `intake_right` | right intake motor | `Intake.RIGHT_MOTOR` |
+| [ ]     | `flywheel_left` | left motor on shared flywheel | `Shooter.LEFT_FLYWHEEL` |
+| [ ]     | `flywheel_right` | right motor on shared flywheel | `Shooter.RIGHT_FLYWHEEL` |
+| [ ]     | `feeder` | shooter feeder motor | `Shooter.FEEDER` |
+| [ ]     | `hood` | shooter hood servo | `Shooter.HOOD` |
+| [ ]     | `limelight` | Required launcher-aligned Limelight 3A | `Vision.HIVE_LIMELIGHT` |
+| [ ]     | `pollen_limelight` | Optional pollen-detection Limelight 3A | `Vision.POLLEN_LIMELIGHT` |
 
 - [ ] Select the correct motor model for every motor in the REV configuration.
 - [ ] Confirm each encoder is connected to the port belonging to the motor whose speed it reports.
@@ -46,13 +46,14 @@ Competition drive configuration is split between `RobotConfig.java` and `pedroPa
 
 Current starting directions:
 
-- front-left and back-left: `REVERSE`
-- front-right and back-right: `FORWARD`
+- all four drive motors: `FORWARD` (confirmed by the direct mecanum drive test)
 - Pinpoint X and Y pods: `FORWARD`
 - Pinpoint pod type: `goBILDA_4_BAR_POD`
 
-- [ ] Put the robot securely on blocks and command low-power forward movement. All wheels must contribute to physical forward motion.
-- [ ] Verify positive strafe and positive turn. Fix incorrect motor directions in `pedroPathing/Constants.java`; do not hide a wiring/direction error by changing joystick signs.
+- [x] Put the robot securely on blocks and command low-power forward movement. All wheels must contribute to physical forward motion.
+- [x] Verify stick-right strafes right and stick-right turns clockwise. `Drivetrain` converts those
+  driver directions to Pedro's left-positive axes; the four confirmed motor directions remain
+  `FORWARD`.
 - [ ] Push the unpowered robot straight forward and sideways while watching Pinpoint telemetry. Confirm the reported axes and pod directions have the expected signs.
 - [ ] Confirm the installed pods are actually goBILDA 4-bar pods. Select the correct pod type or measured custom resolution if not.
 
