@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.constants;
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+
 /** Hardware names and starting values. Never remove a TUNE marker until that value is measured. */
 public final class RobotConfig {
     private RobotConfig() {}
@@ -17,6 +19,15 @@ public final class RobotConfig {
         public static final String BACK_RIGHT = "back_right_motor";
         // REV configuration name for the goBILDA Pinpoint odometry computer.
         public static final String PINPOINT = "pinpoint";
+        // REV configuration name for the Control Hub's built-in orientation sensor.
+        public static final String CONTROL_HUB_IMU = "imu";
+        // VERIFY: the direction the Control Hub logo physically faces on the installed robot.
+        public static final RevHubOrientationOnRobot.LogoFacingDirection CONTROL_HUB_LOGO_DIRECTION =
+                RevHubOrientationOnRobot.LogoFacingDirection.UP;
+        // VERIFY: the direction the Control Hub USB ports physically face on the installed robot.
+        // Incorrect directions make field-oriented controls move at the wrong field angle.
+        public static final RevHubOrientationOnRobot.UsbFacingDirection CONTROL_HUB_USB_DIRECTION =
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
         // TUNE: increase only if an untouched joystick causes motor movement.
         public static double STICK_DEADBAND = .06;
         // TUNE: maximum TeleOp drive power, from 0.0 to 1.0. Keep at 1.0 for full speed;

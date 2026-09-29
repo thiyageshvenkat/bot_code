@@ -4,10 +4,13 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.util.opMode.Bot;
@@ -26,6 +29,10 @@ public class Drivetrain extends SubsystemBase {
     private final Follower follower;
     // Manual robot-centric driving can work without position tracking; autonomous paths cannot.
     private final boolean positionTrackingAvailable;
+    // When Pinpoint is absent, the Control Hub IMU can still provide heading for field-oriented
+    // TeleOp. It cannot provide the X/Y position required for autonomous paths.
+    private final IMU controlHubImu;
+    private final boolean fieldHeadingAvailable;
 
     // Field-centric is the default because stick directions then stay fixed to the field.
     private boolean isRobotCentric = false;
@@ -46,11 +53,17 @@ public class Drivetrain extends SubsystemBase {
             follower = Constants.create(hardwareMap);
         }
         positionTrackingAvailable = !(follower.localizer instanceof Constants.DummyLocalizer);
-        isRobotCentric = !positionTrackingAvailable;
+        controlHubImu = positionTrackingAvailable ? null : initializeControlHubImu(hardwareMap);
+        fieldHeadingAvailable = positionTrackingAvailable || controlHubImu != null;
+        isRobotCentric = !fieldHeadingAvailable;
     }
 
     /** Selects Pedro's manual-drive mode before TeleOp begins sending joystick commands. */
     public void startTeleOp() {
+        // With no Pinpoint, the robot's direction at TeleOp initialization becomes field forward.
+        if (controlHubImu != null) {
+            controlHubImu.resetYaw();
+        }
         follower.manual(0, 0, 0);
     }
 
@@ -69,8 +82,8 @@ public class Drivetrain extends SubsystemBase {
 
     /** Makes forward/strafe relative to the field, independent of robot heading. */
     public void driveFieldCentric() {
-        // Without Pinpoint there is no measured heading, so remain safely robot-centric.
-        if (positionTrackingAvailable) {
+        // Remain robot-centric when neither Pinpoint nor the Control Hub IMU supplies heading.
+        if (fieldHeadingAvailable) {
             isRobotCentric = false;
         }
     }
@@ -96,12 +109,16 @@ public class Drivetrain extends SubsystemBase {
     }
 
     private void applyMovement(double forward, double strafe, double turn) {
+        // The tested driver controls define positive strafe and turn as right. Pedro defines those
+        // two positive directions as left, so reverse them before Pedro calculates wheel powers.
+        double pedroStrafe = -strafe;
+        double pedroTurn = -turn;
         if (isRobotCentric) {
-            follower.manual(forward, strafe, turn);
+            follower.manual(forward, pedroStrafe, pedroTurn);
         } else {
-            // Pedro uses the Pinpoint heading to rotate field directions into robot motor commands.
+            // Rotate the field direction by the measured robot heading before mixing motor powers.
             follower.manual(ManualDrive.fieldCentric(
-                    forward, strafe, turn, follower.pose().heading()));
+                    forward, pedroStrafe, pedroTurn, getFieldHeadingRadians()));
         }
     }
 
@@ -142,6 +159,20 @@ public class Drivetrain extends SubsystemBase {
         return positionTrackingAvailable;
     }
 
+    /** Returns whether field-oriented TeleOp has a usable heading measurement. */
+    public boolean isFieldHeadingAvailable() {
+        return fieldHeadingAvailable;
+    }
+
+    /** Makes the robot's current facing direction the new field-forward direction for TeleOp. */
+    public void resetFieldHeading() {
+        if (positionTrackingAvailable) {
+            follower.setPose(follower.pose().withHeading(0));
+        } else if (controlHubImu != null) {
+            controlHubImu.resetYaw();
+        }
+    }
+
     /**
      * Must run every OpMode loop so Pedro can refresh localization and calculate new motor output.
      */
@@ -157,6 +188,33 @@ public class Drivetrain extends SubsystemBase {
             throw new IllegalStateException(
                     "Autonomous movement requires the Pinpoint device named '"
                             + RobotConfig.Drive.PINPOINT + "'.");
+        }
+    }
+
+    /** Reads heading from Pinpoint when installed, otherwise from the Control Hub IMU. */
+    private double getFieldHeadingRadians() {
+        if (positionTrackingAvailable) {
+            return follower.pose().heading();
+        }
+        return controlHubImu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+    }
+
+    /** Initializes the Control Hub IMU only when Pinpoint is unavailable. */
+    private static IMU initializeControlHubImu(HardwareMap hardwareMap) {
+        try {
+            IMU imu = hardwareMap.tryGet(IMU.class, RobotConfig.Drive.CONTROL_HUB_IMU);
+            if (imu == null) {
+                return null;
+            }
+            RevHubOrientationOnRobot hubOrientation = new RevHubOrientationOnRobot(
+                    RobotConfig.Drive.CONTROL_HUB_LOGO_DIRECTION,
+                    RobotConfig.Drive.CONTROL_HUB_USB_DIRECTION);
+            if (!imu.initialize(new IMU.Parameters(hubOrientation))) {
+                return null;
+            }
+            return imu;
+        } catch (RuntimeException exception) {
+            return null;
         }
     }
 

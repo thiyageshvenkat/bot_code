@@ -30,8 +30,9 @@ public final class Constants {
         c.frontRightName.set(RobotConfig.Drive.FRONT_RIGHT);
         c.backLeftName.set(RobotConfig.Drive.BACK_LEFT);
         c.backRightName.set(RobotConfig.Drive.BACK_RIGHT);
-        c.frontLeftDirection.set(DcMotorSimple.Direction.REVERSE);
-        c.backLeftDirection.set(DcMotorSimple.Direction.REVERSE);
+        // The four FORWARD directions match the direct mecanum OpMode verified on this robot.
+        c.frontLeftDirection.set(DcMotorSimple.Direction.FORWARD);
+        c.backLeftDirection.set(DcMotorSimple.Direction.FORWARD);
         c.frontRightDirection.set(DcMotorSimple.Direction.FORWARD);
         c.backRightDirection.set(DcMotorSimple.Direction.FORWARD);
         c.manualBrakeMode.set(true);
