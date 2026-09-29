@@ -222,7 +222,10 @@ public class Drivetrain extends SubsystemBase {
     }
 
     /** Removes stick drift, restores the remaining range, then cubes it for finer low-speed input. */
-    private static double shape(double input) {
+    static double shape(double input) {
+        if (!Double.isFinite(input)) {
+            return 0.0;
+        }
         double clipped = Range.clip(input, -1.0, 1.0);
         if (Math.abs(clipped) <= RobotConfig.Drive.STICK_DEADBAND) {
             return 0.0;

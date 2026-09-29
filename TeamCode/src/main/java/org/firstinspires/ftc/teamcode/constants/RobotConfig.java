@@ -220,6 +220,8 @@ public final class RobotConfig {
         Drive.NORMAL_DRIVE_POWER_LIMIT = clampFinite(
                 Drive.NORMAL_DRIVE_POWER_LIMIT, 0.0, 1.0, 1.0);
         Drive.PRECISION_SCALE = clampFinite(Drive.PRECISION_SCALE, 0.0, 1.0, .35);
+        Drive.PINPOINT_X_OFFSET_IN = finiteOr(Drive.PINPOINT_X_OFFSET_IN, 0.0);
+        Drive.PINPOINT_Y_OFFSET_IN = finiteOr(Drive.PINPOINT_Y_OFFSET_IN, 0.0);
         Drive.AUTO_PATH_SPEED_LIMIT = clampFinite(Drive.AUTO_PATH_SPEED_LIMIT, 0.0, 1.0, .35);
 
         Intake.COLLECT_POWER = clampFinite(Intake.COLLECT_POWER, -1.0, 1.0, 1.0);

@@ -226,11 +226,11 @@ public final class Shooter extends SubsystemBase {
         return DcMotorSimple.Direction.FORWARD;
     }
 
-    private static double rpmToTicksPerSecond(double rpm) {
+    static double rpmToTicksPerSecond(double rpm) {
         return rpm * RobotConfig.Shooter.SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION / 60.0;
     }
 
-    private static double ticksPerSecondToRpm(double ticksPerSecond) {
+    static double ticksPerSecondToRpm(double ticksPerSecond) {
         return ticksPerSecond * 60.0
                 / RobotConfig.Shooter.SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION;
     }
