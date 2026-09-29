@@ -24,17 +24,20 @@ public abstract class BotOpMode extends CommandOpMode {
 
     @Override
     public final void runOpMode() throws InterruptedException {
-        bot = new Bot(hardwareMap, gamepad1, gamepad2);
-        if (Config.USE_TELEMETRY) TelemetryEx.getInstance().init(telemetry, 50);
+        try {
+            bot = new Bot(hardwareMap, gamepad1, gamepad2);
+            if (Config.USE_TELEMETRY) TelemetryEx.getInstance().init(telemetry, 50);
 
-        if (Config.USE_ADVANTAGE_SCOPE) {
-            // run after waitForStart()
-            schedule(new InstantCommand(AdvantageScopeHelper::start));
+            if (Config.USE_ADVANTAGE_SCOPE) {
+                // run after waitForStart()
+                schedule(new InstantCommand(AdvantageScopeHelper::start));
+            }
+
+            super.runOpMode();
+        } finally {
+            // Clear shared hardware and logging even when initialization or the OpMode throws.
+            Bot.clear();
         }
-
-        super.runOpMode();
-
-        Bot.clear();
     }
 
     @Override
