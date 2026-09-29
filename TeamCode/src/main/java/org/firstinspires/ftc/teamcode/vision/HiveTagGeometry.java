@@ -71,13 +71,17 @@ final class HiveTagGeometry {
      */
     static BiobuzzVision.HiveTarget combineMatchingTagEstimates(
             List<TagOpeningEstimate> tagEstimates) {
-        if (tagEstimates.isEmpty()) {
+        if (tagEstimates == null || tagEstimates.isEmpty()) {
             return null;
         }
         TagOpeningEstimate firstEstimate = tagEstimates.get(0);
+        if (firstEstimate == null) {
+            return null;
+        }
         double[] averageOpeningPosition = new double[3];
         for (TagOpeningEstimate estimate : tagEstimates) {
-            if (estimate.cell != firstEstimate.cell || areTooDifferent(estimate, firstEstimate)) {
+            if (estimate == null || estimate.cell != firstEstimate.cell
+                    || areTooDifferent(estimate, firstEstimate)) {
                 // Do not average different Cells or combine one likely-bad measurement with others.
                 return null;
             }
