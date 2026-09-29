@@ -50,6 +50,16 @@ public final class Shooter extends SubsystemBase {
      * motors assist the shared flywheel; that physical direction still must be verified safely.
      */
     public Shooter(HardwareMap hardwareMap) {
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
+        if (!Double.isFinite(RobotConfig.Shooter.SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION)
+                || RobotConfig.Shooter.SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION <= 0) {
+            throw new IllegalStateException(
+                    "Shooter encoder ticks per motor revolution must be greater than zero");
+        }
+        if (!Double.isFinite(RobotConfig.Shooter.SHOOTER_MOTOR_MAX_RPM)
+                || RobotConfig.Shooter.SHOOTER_MOTOR_MAX_RPM <= 0) {
+            throw new IllegalStateException("Shooter motor maximum RPM must be greater than zero");
+        }
         leftFlywheel = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.LEFT_FLYWHEEL);
         rightFlywheel = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.RIGHT_FLYWHEEL);
         feeder = hardwareMap.get(DcMotorEx.class, RobotConfig.Shooter.FEEDER);
@@ -78,7 +88,9 @@ public final class Shooter extends SubsystemBase {
         }
 
         // Never send a negative launch speed, and never send the servo outside its valid range.
-        targetTicksPerSecond = rpmToTicksPerSecond(Math.max(0.0, solution.shooterTargetRpm));
+        double targetRpm = Range.clip(solution.shooterTargetRpm, 0.0,
+                RobotConfig.Shooter.SHOOTER_MOTOR_MAX_RPM);
+        targetTicksPerSecond = rpmToTicksPerSecond(targetRpm);
         hood.setPosition(Range.clip(solution.hoodPosition, 0.0, 1.0));
 
         // Both motors drive the same physical flywheel and therefore receive the same speed target.

@@ -50,17 +50,17 @@ public final class RobotConfig {
         // TUNE: maximum drive output while the driver holds precision mode.
         public static double PRECISION_SCALE = .35;
         // TUNE: sideways distance from the robot's rotation center to the forward-tracking
-        // Pinpoint pod, in inches. Left of center is positive; right is negative.
-        @IgnoreConfigurable
+        // Pinpoint pod, in inches. Left of center is positive; right is negative. A Panels change
+        // takes effect the next time the Pedro Follower is created.
         public static double PINPOINT_X_OFFSET_IN = 0;
         // TUNE: forward/backward distance from the robot's rotation center to the
-        // sideways-tracking Pinpoint pod, in inches. Forward is positive; backward is negative.
-        @IgnoreConfigurable
+        // sideways-tracking Pinpoint pod, in inches. Forward is positive; backward is negative. A
+        // Panels change takes effect the next time the Pedro Follower is created.
         public static double PINPOINT_Y_OFFSET_IN = 0;
         // TUNE: maximum Pedro autonomous path speed, from 0.0 to 1.0. Start at 0.35,
         // run ForesightTuner, install its measured values, then raise this gradually toward 1.0.
         // Do not compensate for this safety limit by multiplying controller gains or velocities.
-        @IgnoreConfigurable
+        // A Panels change takes effect the next time the Pedro Follower is created.
         public static double AUTO_PATH_SPEED_LIMIT = .35;
     }
 
@@ -111,12 +111,20 @@ public final class RobotConfig {
         public static boolean FEEDER_REVERSED = false;
         // TUNE: starting shooter speed; distance adjustment raises or lowers this target.
         public static double SHOOTER_BASE_TARGET_RPM = 4000;
+        // TUNE: multiplier applied to the base RPM at NEAR_DISTANCE_IN.
+        public static double NEAR_SHOT_RPM_SCALE = .88;
+        // TUNE: multiplier applied to the base RPM at FAR_DISTANCE_IN.
+        public static double FAR_SHOT_RPM_SCALE = 1.12;
         // TUNE: maximum RPM error allowed before the feeder may run.
         public static double SHOOTER_MAX_READY_ERROR_RPM = 160;
         // VERIFY: both intended 1:1 6000-RPM Yellow Jackets produce 28 encoder ticks per revolution.
         // Confirm the installed motor SKUs and 1:1 connection before relying on displayed RPM.
         @IgnoreConfigurable
         public static double SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION = 28;
+        // VERIFY: rated free speed of the installed 6000-RPM motors. This hardware limit prevents
+        // an accidental Panels value from commanding a speed beyond the motor specification.
+        @IgnoreConfigurable
+        public static double SHOOTER_MOTOR_MAX_RPM = 6000;
         // TUNE: seconds the shooter must remain within its allowed RPM error before feeding.
         public static double READY_HOLD_SECONDS = .12;
         // TUNE: feeder motor power applied while sending one element into the flywheel.
@@ -201,5 +209,76 @@ public final class RobotConfig {
         public static double SHOOT_CUTOFF_SECONDS = 27;
         // Final fail-safe: stop every mechanism one second before a 30-second auto ends.
         public static double MATCH_SAFETY_CUTOFF_SECONDS = 29;
+    }
+
+    /**
+     * Corrects unsafe values entered through Panels before competition code uses them. Panels does
+     * not enforce numeric ranges, so every active OpMode calls this during initialization and loop.
+     */
+    public static void keepLiveTuningValuesWithinSafeRanges() {
+        Drive.STICK_DEADBAND = clampFinite(Drive.STICK_DEADBAND, 0.0, 0.95, .06);
+        Drive.NORMAL_DRIVE_POWER_LIMIT = clampFinite(
+                Drive.NORMAL_DRIVE_POWER_LIMIT, 0.0, 1.0, 1.0);
+        Drive.PRECISION_SCALE = clampFinite(Drive.PRECISION_SCALE, 0.0, 1.0, .35);
+        Drive.AUTO_PATH_SPEED_LIMIT = clampFinite(Drive.AUTO_PATH_SPEED_LIMIT, 0.0, 1.0, .35);
+
+        Intake.COLLECT_POWER = clampFinite(Intake.COLLECT_POWER, -1.0, 1.0, 1.0);
+        Intake.REVERSE_POWER = clampFinite(Intake.REVERSE_POWER, -1.0, 1.0, -.75);
+
+        Shooter.SHOOTER_BASE_TARGET_RPM = clampFinite(
+                Shooter.SHOOTER_BASE_TARGET_RPM, 0.0, Shooter.SHOOTER_MOTOR_MAX_RPM, 4000);
+        Shooter.NEAR_SHOT_RPM_SCALE = nonnegativeFinite(Shooter.NEAR_SHOT_RPM_SCALE, .88);
+        Shooter.FAR_SHOT_RPM_SCALE = nonnegativeFinite(Shooter.FAR_SHOT_RPM_SCALE, 1.12);
+        Shooter.SHOOTER_MAX_READY_ERROR_RPM = nonnegativeFinite(
+                Shooter.SHOOTER_MAX_READY_ERROR_RPM, 160);
+        Shooter.READY_HOLD_SECONDS = nonnegativeFinite(Shooter.READY_HOLD_SECONDS, .12);
+        Shooter.FEED_POWER = clampFinite(Shooter.FEED_POWER, -1.0, 1.0, .85);
+        Shooter.FEED_SECONDS = nonnegativeFinite(Shooter.FEED_SECONDS, .18);
+        Shooter.HOOD_STOW = clampFinite(Shooter.HOOD_STOW, 0.0, 1.0, .16);
+        Shooter.HOOD_NEAR = clampFinite(Shooter.HOOD_NEAR, 0.0, 1.0, .43);
+        Shooter.HOOD_FAR = clampFinite(Shooter.HOOD_FAR, 0.0, 1.0, .62);
+        Shooter.NEAR_DISTANCE_IN = nonnegativeFinite(Shooter.NEAR_DISTANCE_IN, 30);
+        Shooter.FAR_DISTANCE_IN = nonnegativeFinite(Shooter.FAR_DISTANCE_IN, 84);
+
+        Vision.MIN_CONFIDENCE = clampFinite(Vision.MIN_CONFIDENCE, 0.0, 1.0, .40);
+        Vision.HIVE_AIM_BEARING_DEGREES = finiteOr(
+                Vision.HIVE_AIM_BEARING_DEGREES, 0);
+        Vision.HIVE_AIM_TOLERANCE_DEGREES = nonnegativeFinite(
+                Vision.HIVE_AIM_TOLERANCE_DEGREES, 2);
+        Vision.HIVE_AIM_TURN_POWER_PER_DEGREE = nonnegativeFinite(
+                Vision.HIVE_AIM_TURN_POWER_PER_DEGREE, .018);
+        Vision.HIVE_AIM_MAX_TURN_POWER = clampFinite(
+                Vision.HIVE_AIM_MAX_TURN_POWER, 0.0, 1.0, 1.0);
+        Vision.MAX_FRAME_AGE_MS = clampFinite(Vision.MAX_FRAME_AGE_MS, 1.0, 1000.0, 150);
+        Vision.HIVE_MAX_POSITION_DIFFERENCE_IN = nonnegativeFinite(
+                Vision.HIVE_MAX_POSITION_DIFFERENCE_IN, .75);
+        Vision.HIVE_MAX_ROTATION_DIFFERENCE_DEGREES = clampFinite(
+                Vision.HIVE_MAX_ROTATION_DIFFERENCE_DEGREES, 0.0, 180.0, 3);
+        Vision.HIVE_UPRIGHT_MARGIN_DEGREES = clampFinite(
+                Vision.HIVE_UPRIGHT_MARGIN_DEGREES, 0.0, 90.0, 15);
+        Vision.HIVE_POST_FEED_WAIT_SECONDS = nonnegativeFinite(
+                Vision.HIVE_POST_FEED_WAIT_SECONDS, 0);
+
+        Auto.MATCH_SAFETY_CUTOFF_SECONDS = clampFinite(
+                Auto.MATCH_SAFETY_CUTOFF_SECONDS, 0.0, 30.0, 29);
+        Auto.SHOOT_CUTOFF_SECONDS = clampFinite(
+                Auto.SHOOT_CUTOFF_SECONDS, 0.0,
+                Auto.MATCH_SAFETY_CUTOFF_SECONDS, 27);
+    }
+
+    private static double nonnegativeFinite(double value, double fallback) {
+        return Double.isFinite(value) ? Math.max(0.0, value) : fallback;
+    }
+
+    private static double finiteOr(double value, double fallback) {
+        return Double.isFinite(value) ? value : fallback;
+    }
+
+    private static double clampFinite(
+            double value, double minimum, double maximum, double fallback) {
+        if (!Double.isFinite(value)) {
+            value = fallback;
+        }
+        return Math.max(minimum, Math.min(maximum, value));
     }
 }

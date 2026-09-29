@@ -37,7 +37,7 @@ public class Drivetrain extends SubsystemBase {
     // Field-centric is the default because stick directions then stay fixed to the field.
     private boolean isRobotCentric = false;
     // The driver can temporarily replace the full-power limit with the precision-mode limit.
-    private double speedScale = RobotConfig.Drive.NORMAL_DRIVE_POWER_LIMIT;
+    private double speedScale;
 
     /**
      * Reuses a Follower supplied by the template's Bot runtime when one exists; otherwise creates
@@ -47,6 +47,8 @@ public class Drivetrain extends SubsystemBase {
      * @param hardwareMap active FTC hardware configuration used when a Follower must be created
      */
     public Drivetrain(HardwareMap hardwareMap) {
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
+        speedScale = RobotConfig.Drive.NORMAL_DRIVE_POWER_LIMIT;
         if (Bot.follower != null) {
             follower = Bot.follower;
         } else {
@@ -90,6 +92,7 @@ public class Drivetrain extends SubsystemBase {
 
     /** Chooses between the driver-controlled full-speed and precision-speed limits. */
     public void setPrecisionMode(boolean enabled) {
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
         if (enabled) {
             speedScale = RobotConfig.Drive.PRECISION_SCALE;
         } else {

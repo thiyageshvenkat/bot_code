@@ -68,6 +68,12 @@ public final class Constants {
     });
 
     public static Follower create(HardwareMap hardwareMap) {
+        // These Panels values are read again for each new Follower; changing them cannot safely
+        // rebuild the localizer or controller in the middle of an active OpMode.
+        localizerConfig.xPodOffset.set(RobotConfig.Drive.PINPOINT_X_OFFSET_IN);
+        localizerConfig.yPodOffset.set(RobotConfig.Drive.PINPOINT_Y_OFFSET_IN);
+        foresightConfig.maxPathSpeed.set(RobotConfig.Drive.AUTO_PATH_SPEED_LIMIT);
+
         Localizer localizer;
         try {
             if (hardwareMap.tryGet(GoBildaPinpointDriver.class, localizerConfig.name.get()) != null) {

@@ -49,6 +49,7 @@ abstract class BiobuzzAutoBase extends OpMode {
     public void init() {
         // INIT establishes localization and the four-preload software assumption. Shooter
         // construction also stows the hood, so physical clearance must be checked before INIT.
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
         plan = BiobuzzAutoPlan.forAlliance(alliance);
         drivetrain = new Drivetrain(hardwareMap);
         drivetrain.startAuto();
@@ -92,6 +93,7 @@ abstract class BiobuzzAutoBase extends OpMode {
 
     @Override
     public void loop() {
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
         // The hard cutoff takes priority over state logic. It is intentionally allowed to interrupt
         // an active feeder pulse because stopping before Auto ends is the higher-level safety rule.
         if (matchTimer.seconds() >= RobotConfig.Auto.MATCH_SAFETY_CUTOFF_SECONDS) {

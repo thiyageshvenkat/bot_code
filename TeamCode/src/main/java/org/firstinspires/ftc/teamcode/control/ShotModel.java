@@ -20,7 +20,9 @@ public final class ShotModel {
         double t = denominator == 0.0 ? 0.0
                 : (distance - RobotConfig.Shooter.NEAR_DISTANCE_IN) / denominator;
         t = Math.max(0.0, Math.min(1.0, t));
-        return new ShotModel(RobotConfig.Shooter.SHOOTER_BASE_TARGET_RPM * lerp(0.88, 1.12, t),
+        return new ShotModel(RobotConfig.Shooter.SHOOTER_BASE_TARGET_RPM * lerp(
+                RobotConfig.Shooter.NEAR_SHOT_RPM_SCALE,
+                RobotConfig.Shooter.FAR_SHOT_RPM_SCALE, t),
                 lerp(RobotConfig.Shooter.HOOD_NEAR, RobotConfig.Shooter.HOOD_FAR, t));
     }
 

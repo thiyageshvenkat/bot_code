@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes.teleop;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.constants.RobotConfig;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 
 /**
@@ -15,6 +16,7 @@ public class DrivebaseTeleOp extends OpMode {
 
     @Override
     public void init() {
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
         drivetrain = new Drivetrain(hardwareMap);
         drivetrain.startTeleOp();
         if (!usesFieldOrientedDrive()) {
@@ -35,6 +37,7 @@ public class DrivebaseTeleOp extends OpMode {
 
     @Override
     public void loop() {
+        RobotConfig.keepLiveTuningValuesWithinSafeRanges();
         // Left stick translates, right stick turns, right trigger enables precision speed
         drivetrain.setPrecisionMode(gamepad1.right_trigger > 0.4);
         if (usesFieldOrientedDrive() && gamepad1.a) {
