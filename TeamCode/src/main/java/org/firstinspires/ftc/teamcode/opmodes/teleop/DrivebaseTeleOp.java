@@ -17,9 +17,19 @@ public class DrivebaseTeleOp extends OpMode {
     public void init() {
         drivetrain = new Drivetrain(hardwareMap);
         drivetrain.startTeleOp();
-        telemetry.addData("Drive mode", drivetrain.isPositionTrackingAvailable()
-                ? "Field-centric (Pinpoint detected)"
-                : "Robot-centric (no Pinpoint)");
+        if (!usesFieldOrientedDrive()) {
+            drivetrain.driveRobotCentric();
+            telemetry.addData("Drive mode", "Robot-oriented (driver-centric)");
+        } else if (drivetrain.isPositionTrackingAvailable()) {
+            telemetry.addData("Drive mode", "Field-oriented (Pinpoint heading)");
+        } else if (drivetrain.isFieldHeadingAvailable()) {
+            telemetry.addData("Drive mode", "Field-oriented (Control Hub IMU heading)");
+        } else {
+            telemetry.addData("Drive mode", "Robot-centric (no heading sensor)");
+        }
+        if (usesFieldOrientedDrive()) {
+            telemetry.addLine("Press driver A to make the current direction field forward");
+        }
         telemetry.update();
     }
 
@@ -27,6 +37,9 @@ public class DrivebaseTeleOp extends OpMode {
     public void loop() {
         // Left stick translates, right stick turns, right trigger enables precision speed
         drivetrain.setPrecisionMode(gamepad1.right_trigger > 0.4);
+        if (usesFieldOrientedDrive() && gamepad1.a) {
+            drivetrain.resetFieldHeading();
+        }
         drivetrain.setMovement(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
 
         drivetrain.periodic();
@@ -38,5 +51,10 @@ public class DrivebaseTeleOp extends OpMode {
     @Override
     public void stop() {
         drivetrain.stop();
+    }
+
+    /** Lets the separate driver-centric test reuse this hardware setup and drive loop. */
+    protected boolean usesFieldOrientedDrive() {
+        return true;
     }
 }

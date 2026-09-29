@@ -59,6 +59,10 @@ abstract class BiobuzzTeleOpBase extends OpMode {
     public void loop() {
         // Driver controls: left stick translates, right stick turns, and right trigger slows the drive.
         drivetrain.setPrecisionMode(gamepad1.right_trigger > 0.4);
+        if (gamepad1.a) {
+            // Re-establish field forward after placing the robot or if the heading was reset.
+            drivetrain.resetFieldHeading();
+        }
         drivetrain.setMovement(-gamepad1.left_stick_y, gamepad1.left_stick_x,
                 gamepad1.right_stick_x);
 
