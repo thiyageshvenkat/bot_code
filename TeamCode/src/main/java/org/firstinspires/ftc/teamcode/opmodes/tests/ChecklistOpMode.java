@@ -47,7 +47,10 @@ public class ChecklistOpMode extends LinearOpModeEx {
         if (deviceNames.isEmpty()) {
             TelemetryEx.getInstance().addLine("No devices found in configuration!")
                     .requestUpdate();
-            while (opModeIsActive());
+            // Keep the message visible until Stop is pressed without busy-spinning the CPU.
+            while (opModeIsActive()) {
+                idle();
+            }
             return;
         }
 
