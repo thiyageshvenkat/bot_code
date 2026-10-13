@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.control.Superstructure;
 import org.firstinspires.ftc.teamcode.game.AllianceColor;
 import org.firstinspires.ftc.teamcode.game.ScoringElement;
 import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
+import org.firstinspires.ftc.teamcode.subsystems.Matchloader;
 import org.firstinspires.ftc.teamcode.vision.BiobuzzVision;
 
 /** Driver-controlled competition mode; alliance selection filters vision and tracked nectar entries. */
@@ -19,9 +20,11 @@ abstract class BiobuzzTeleOpBase extends OpMode {
     private final AllianceColor alliance;
     protected Drivetrain drivetrain;
     protected Superstructure superstructure;
+    private Matchloader matchloader;
 
     // Previous button states make each press trigger once instead of once per control-loop cycle.
     private boolean previousShoot;
+    private boolean previousMatchloaderToggle;
     private boolean previousInventoryAdd;
     private boolean previousInventoryRemove;
     private boolean previousNectarAdd;
@@ -38,6 +41,8 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         drivetrain.startTeleOp();
         // Hive vision is useful telemetry here, but an absent camera must not prevent driving.
         superstructure = Superstructure.forTeleOp(hardwareMap, alliance);
+        // Matchloader is TeleOp-only; construction commands its measured stowed position.
+        matchloader = new Matchloader(hardwareMap);
         // TeleOp does not start with a guaranteed four pollen: Auto may have already fired them.
         // Leave this unknown count empty; it will not block sensorless driver-requested feeding.
         telemetry.addLine("BIOBUZZ initialized");
@@ -99,6 +104,14 @@ abstract class BiobuzzTeleOpBase extends OpMode {
             superstructure.queueHiveShot(inventoryTrackingEnabled());
         }
         previousShoot = shoot;
+
+        // One press changes endpoints. Because toggle() only sends a new servo target and never
+        // waits for completion, another press can reverse the matchloader while it is still moving.
+        boolean matchloaderToggle = gamepad2.left_bumper;
+        if (matchloaderToggle && !previousMatchloaderToggle) {
+            matchloader.toggle();
+        }
+        previousMatchloaderToggle = matchloaderToggle;
 
         updateInventory(true);
 
@@ -178,9 +191,9 @@ abstract class BiobuzzTeleOpBase extends OpMode {
         publishInventory();
         telemetry.addData("Intake", superstructure.intake.getState());
         telemetry.addData("Intake capacity lockout", isIntakeCapacityLocked());
-        telemetry.addData("Shooter RPM", "%s | left: %.0f | right: %.0f | target: %.0f",
-                superstructure.shooter.getState(), superstructure.shooter.getLeftSpeedRpm(),
-                superstructure.shooter.getRightSpeedRpm(),
+        telemetry.addData("Matchloader command", matchloader.getCommand());
+        telemetry.addData("Shooter RPM", "%s | measured: %.0f | target: %.0f",
+                superstructure.shooter.getState(), superstructure.shooter.getSpeedRpm(),
                 superstructure.shooter.getTargetRpm());
         telemetry.addData("Hive Limelight installed/connected", "%s/%s",
                 superstructure.vision.isHiveCameraInstalled(),

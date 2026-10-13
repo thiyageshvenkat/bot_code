@@ -87,25 +87,34 @@ public final class RobotConfig {
     }
 
     @Configurable
+    public static final class Matchloader {
+        private Matchloader() {}
+
+        // REV configuration name for the goBILDA Speed Servo in positional-feedback mode.
+        @IgnoreConfigurable
+        public static final String SERVO = "matchloader";
+        // TUNE: servo position that leaves the matchloader raised and retracted. The neutral
+        // starting value prevents unmeasured movement; measure this before attaching the linkage.
+        public static double STOWED_POSITION = .5;
+        // TUNE: servo position that lowers and extends the matchloader. It intentionally starts at
+        // the same neutral value as STOWED_POSITION until the completed mechanism is measured.
+        public static double DEPLOYED_POSITION = .5;
+    }
+
+    @Configurable
     public static final class Shooter {
         private Shooter() {}
 
-        // REV configuration name for the left motor driving the shared shooter flywheel.
+        // REV configuration name for the single motor driving the shooter flywheel. The existing
+        // "flywheel_left" configuration name is retained so the saved REV configuration still works.
         @IgnoreConfigurable
-        public static final String LEFT_FLYWHEEL = "flywheel_left";
-        // REV configuration name for the right motor driving the same shooter flywheel.
-        @IgnoreConfigurable
-        public static final String RIGHT_FLYWHEEL = "flywheel_right";
+        public static final String FLYWHEEL = "flywheel_left";
         // REV configuration name for the motor that feeds elements into the flywheel.
         @IgnoreConfigurable
         public static final String FEEDER = "feeder";
         // REV configuration name for the servo that sets the launch angle.
         @IgnoreConfigurable
         public static final String HOOD = "hood";
-        // VERIFY: Rayansh's configuration used false; confirm both motors assist rather than fight
-        // each other before testing them while mechanically coupled to the shared flywheel.
-        @IgnoreConfigurable
-        public static boolean RIGHT_FLYWHEEL_REVERSED = false;
         // Reverses the feeder direction when its physical installation requires it.
         @IgnoreConfigurable
         public static boolean FEEDER_REVERSED = false;
@@ -117,11 +126,11 @@ public final class RobotConfig {
         public static double FAR_SHOT_RPM_SCALE = 1.12;
         // TUNE: maximum RPM error allowed before the feeder may run.
         public static double SHOOTER_MAX_READY_ERROR_RPM = 160;
-        // VERIFY: both intended 1:1 6000-RPM Yellow Jackets produce 28 encoder ticks per revolution.
-        // Confirm the installed motor SKUs and 1:1 connection before relying on displayed RPM.
+        // VERIFY: the intended 6000-RPM Yellow Jacket produces 28 encoder ticks per motor
+        // revolution. At the confirmed 1:1 ratio, motor RPM and physical flywheel RPM are equal.
         @IgnoreConfigurable
         public static double SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION = 28;
-        // VERIFY: rated free speed of the installed 6000-RPM motors. This hardware limit prevents
+        // VERIFY: rated free speed of the installed 6000-RPM motor. This hardware limit prevents
         // an accidental Panels value from commanding a speed beyond the motor specification.
         @IgnoreConfigurable
         public static double SHOOTER_MOTOR_MAX_RPM = 6000;
@@ -226,6 +235,11 @@ public final class RobotConfig {
 
         Intake.COLLECT_POWER = clampFinite(Intake.COLLECT_POWER, -1.0, 1.0, 1.0);
         Intake.REVERSE_POWER = clampFinite(Intake.REVERSE_POWER, -1.0, 1.0, -.75);
+
+        Matchloader.STOWED_POSITION = clampFinite(
+                Matchloader.STOWED_POSITION, 0.0, 1.0, .5);
+        Matchloader.DEPLOYED_POSITION = clampFinite(
+                Matchloader.DEPLOYED_POSITION, 0.0, 1.0, .5);
 
         Shooter.SHOOTER_BASE_TARGET_RPM = clampFinite(
                 Shooter.SHOOTER_BASE_TARGET_RPM, 0.0, Shooter.SHOOTER_MOTOR_MAX_RPM, 4000);

@@ -48,6 +48,8 @@ public class RobotConfigTest {
         RobotConfig.Drive.AUTO_PATH_SPEED_LIMIT = 1;
         RobotConfig.Intake.COLLECT_POWER = -1;
         RobotConfig.Intake.REVERSE_POWER = 1;
+        RobotConfig.Matchloader.STOWED_POSITION = 0;
+        RobotConfig.Matchloader.DEPLOYED_POSITION = 1;
         RobotConfig.Shooter.SHOOTER_BASE_TARGET_RPM =
                 RobotConfig.Shooter.SHOOTER_MOTOR_MAX_RPM;
         RobotConfig.Shooter.NEAR_SHOT_RPM_SCALE = 0;
@@ -80,6 +82,8 @@ public class RobotConfigTest {
         assertEquals(-123.5, RobotConfig.Drive.PINPOINT_X_OFFSET_IN, 0);
         assertEquals(456.25, RobotConfig.Drive.PINPOINT_Y_OFFSET_IN, 0);
         assertEquals(-1, RobotConfig.Intake.COLLECT_POWER, 0);
+        assertEquals(0, RobotConfig.Matchloader.STOWED_POSITION, 0);
+        assertEquals(1, RobotConfig.Matchloader.DEPLOYED_POSITION, 0);
         assertEquals(RobotConfig.Shooter.SHOOTER_MOTOR_MAX_RPM,
                 RobotConfig.Shooter.SHOOTER_BASE_TARGET_RPM, 0);
         assertEquals(-1, RobotConfig.Shooter.FEED_POWER, 0);
@@ -123,6 +127,8 @@ public class RobotConfigTest {
         RobotConfig.Drive.AUTO_PATH_SPEED_LIMIT = value;
         RobotConfig.Intake.COLLECT_POWER = value;
         RobotConfig.Intake.REVERSE_POWER = value;
+        RobotConfig.Matchloader.STOWED_POSITION = value;
+        RobotConfig.Matchloader.DEPLOYED_POSITION = value;
         RobotConfig.Shooter.SHOOTER_BASE_TARGET_RPM = value;
         RobotConfig.Shooter.NEAR_SHOT_RPM_SCALE = value;
         RobotConfig.Shooter.FAR_SHOT_RPM_SCALE = value;
@@ -158,6 +164,8 @@ public class RobotConfigTest {
         assertRange(RobotConfig.Drive.AUTO_PATH_SPEED_LIMIT, 0, 1);
         assertRange(RobotConfig.Intake.COLLECT_POWER, -1, 1);
         assertRange(RobotConfig.Intake.REVERSE_POWER, -1, 1);
+        assertRange(RobotConfig.Matchloader.STOWED_POSITION, 0, 1);
+        assertRange(RobotConfig.Matchloader.DEPLOYED_POSITION, 0, 1);
         assertRange(RobotConfig.Shooter.SHOOTER_BASE_TARGET_RPM,
                 0, RobotConfig.Shooter.SHOOTER_MOTOR_MAX_RPM);
         assertNonnegativeFinite(RobotConfig.Shooter.NEAR_SHOT_RPM_SCALE);
@@ -207,6 +215,8 @@ public class RobotConfigTest {
                 RobotConfig.Drive.AUTO_PATH_SPEED_LIMIT,
                 RobotConfig.Intake.COLLECT_POWER,
                 RobotConfig.Intake.REVERSE_POWER,
+                RobotConfig.Matchloader.STOWED_POSITION,
+                RobotConfig.Matchloader.DEPLOYED_POSITION,
                 RobotConfig.Shooter.SHOOTER_BASE_TARGET_RPM,
                 RobotConfig.Shooter.NEAR_SHOT_RPM_SCALE,
                 RobotConfig.Shooter.FAR_SHOT_RPM_SCALE,
@@ -243,6 +253,8 @@ public class RobotConfigTest {
             RobotConfig.Drive.AUTO_PATH_SPEED_LIMIT = values[i++];
             RobotConfig.Intake.COLLECT_POWER = values[i++];
             RobotConfig.Intake.REVERSE_POWER = values[i++];
+            RobotConfig.Matchloader.STOWED_POSITION = values[i++];
+            RobotConfig.Matchloader.DEPLOYED_POSITION = values[i++];
             RobotConfig.Shooter.SHOOTER_BASE_TARGET_RPM = values[i++];
             RobotConfig.Shooter.NEAR_SHOT_RPM_SCALE = values[i++];
             RobotConfig.Shooter.FAR_SHOT_RPM_SCALE = values[i++];
