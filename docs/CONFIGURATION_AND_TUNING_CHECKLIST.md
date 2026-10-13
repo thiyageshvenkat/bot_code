@@ -6,10 +6,10 @@ Record the date, battery voltage, robot revision, and final measured value besid
 
 ## 1. Before applying power
 
-- [ ] Confirm the robot uses no more than the permitted motors and servos. The current design expects eight motors: four drive, intake, two motors driving one shared flywheel, and feeder; it also expects one hood servo.
+- [ ] Confirm the robot uses no more than the permitted motors and servos. The current design expects eight motors: four drive, two intake, one flywheel, and one feeder; it also expects a hood servo and a matchloader servo.
 - [ ] Confirm every mechanism moves freely by hand and no wire can enter the drivetrain, intake, feeder, or flywheel.
 - [ ] Confirm the flywheel has a guard and the robot can be stopped immediately during testing.
-- [ ] Confirm both flywheel motors are actually coupled to the same physical flywheel and are intended to assist each other.
+- [ ] Confirm the 6000-RPM flywheel motor drives the flywheel at the agreed 1:1 ratio.
 - [ ] Confirm the battery, main switch, Control Hub, Expansion Hub if used, and all motor/encoder ports match the wiring plan.
 - [ ] Confirm the robot starts inside the legal starting dimensions and remains within expansion limits throughout every mechanism motion.
 
@@ -26,10 +26,10 @@ The following names must match exactly. Change the REV configuration or the corr
 | [ ]     | `pinpoint` | goBILDA Pinpoint computer | `Drive.PINPOINT` |
 | [ ]     | `intake_left` | left intake motor | `Intake.LEFT_MOTOR` |
 | [ ]     | `intake_right` | right intake motor | `Intake.RIGHT_MOTOR` |
-| [ ]     | `flywheel_left` | left motor on shared flywheel | `Shooter.LEFT_FLYWHEEL` |
-| [ ]     | `flywheel_right` | right motor on shared flywheel | `Shooter.RIGHT_FLYWHEEL` |
+| [ ]     | `flywheel_left` | single motor on flywheel (legacy REV name retained) | `Shooter.FLYWHEEL` |
 | [ ]     | `feeder` | shooter feeder motor | `Shooter.FEEDER` |
 | [ ]     | `hood` | shooter hood servo | `Shooter.HOOD` |
+| [ ]     | `matchloader` | goBILDA Speed Servo in positional mode | `Matchloader.SERVO` |
 | [ ]     | `limelight` | Required launcher-aligned Limelight 3A | `Vision.HIVE_LIMELIGHT` |
 | [ ]     | `pollen_limelight` | Optional pollen-detection Limelight 3A | `Vision.POLLEN_LIMELIGHT` |
 
@@ -120,19 +120,35 @@ Do not increase gains to compensate for a low speed limit. Tune localization and
 - [ ] If sensors are later added, test entry, exit, reverse, jam, bounce, rapid intake/outtake, OpMode restart, and simultaneous detections before enabling capacity enforcement.
 - [ ] Verify the intake cannot deliberately retain opponent Nectar. The current sensorless code cannot identify what physically entered.
 
+### Matchloader
+
+Keep the goBILDA Speed Servo in positional-feedback mode. Continuous-rotation mode provides speed
+and direction but no endpoint position to FTC code, so it cannot stop reliably at stowed/deployed
+without additional sensors.
+
+| Checked | Constant | Starting value | How to tune | Final |
+| --- | --- | --- | --- | --- |
+| [ ] | `STOWED_POSITION` | `0.5` | With the linkage disconnected, find the command that leaves the mechanism raised and retracted. | ______ |
+| [ ] | `DEPLOYED_POSITION` | `0.5` | Find the command that lowers and extends it without reaching a mechanical hard stop. | ______ |
+
+- [ ] Program the servo for positional/default mode before connecting it to the mechanism.
+- [ ] Attach the linkage only after both positions have been measured safely.
+- [ ] Confirm INIT commands the stowed endpoint without binding the linkage.
+- [ ] Press gamepad 2 left bumper during deployment and confirm it immediately returns toward stowed.
+- [ ] Confirm matchloader movement never starts or stops the intake.
+
 ## 5. Shooter hardware and direction
 
-Do these checks with belts removed when practical, then reconnect at low power. Never run coupled motors until their directions are known.
+Do these checks with the belt removed when practical, then reconnect at low power.
 
 | Checked | Constant | Starting value | Required verification | Final |
 | --- | --- | --- | --- | --- |
-| [ ] | `RIGHT_FLYWHEEL_REVERSED` | `false` | Both motors must assist the shared flywheel rather than fight. | ______ |
 | [ ] | `FEEDER_REVERSED` | `false` | Positive feed power must move pollen toward the flywheel. | ______ |
-| [ ] | `SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION` | `28` | Confirm both installed motor SKUs and the encoder-to-flywheel gearing. | ______ |
-| [ ] | encoder velocity signs | positive while shooting | Both displayed RPM values must be positive and plausible. | ______ |
+| [ ] | `SHOOTER_ENCODER_TICKS_PER_MOTOR_REVOLUTION` | `28` | Confirm the installed motor SKU and encoder resolution. | ______ |
+| [ ] | encoder velocity sign | positive while shooting | The displayed RPM must be positive and plausible. | ______ |
 | [ ] | hood servo direction/range | REV configuration/default | Increasing commanded position must move the hood in the expected direction. | ______ |
 
-The value `28` is motor-shaft encoder ticks per revolution for the intended 1:1 6000-RPM motors. If the motor SKU or interpretation of encoder ticks differs, displayed RPM and readiness will be wrong. Flywheel-to-motor gearing affects physical flywheel RPM even when motor RPM telemetry is correct.
+The value `28` is motor-shaft encoder ticks per revolution for the intended 6000-RPM Yellow Jacket. The confirmed 1:1 ratio means motor RPM equals flywheel RPM. If the motor SKU, encoder interpretation, or physical ratio changes, displayed flywheel RPM and readiness will be wrong.
 
 ## 6. Shooter feed and readiness
 
@@ -141,8 +157,8 @@ Tune with one pollen first, a guarded flywheel, and repeated battery-voltage con
 | Checked | Constant | Starting value | What it controls | Final |
 | --- | --- | --- | --- | --- |
 | [ ] | `SHOOTER_BASE_TARGET_RPM` | `4000 RPM` | Center of the preliminary two-point shot model. | ______ |
-| [ ] | `SHOOTER_MAX_READY_ERROR_RPM` | `160 RPM` | Maximum error for each flywheel motor before feed. | ______ |
-| [ ] | `READY_HOLD_SECONDS` | `0.12 s` | Continuous time both motors must remain in tolerance. | ______ |
+| [ ] | `SHOOTER_MAX_READY_ERROR_RPM` | `160 RPM` | Maximum flywheel speed error before feed. | ______ |
+| [ ] | `READY_HOLD_SECONDS` | `0.12 s` | Continuous time the flywheel must remain in tolerance. | ______ |
 | [ ] | `FEED_POWER` | `0.85` | Feeder power during one pulse. | ______ |
 | [ ] | `FEED_SECONDS` | `0.18 s` | Pulse duration; too short may half-feed, too long may double-feed/jam. | ______ |
 | [ ] | `HOOD_STOW` | `0.16` | Safe stopped position without hitting a servo hard stop. | ______ |
@@ -152,9 +168,9 @@ Tune with one pollen first, a guarded flywheel, and repeated battery-voltage con
 | [ ] | `FAR_DISTANCE_IN` | `84 in` | Actual launcher reference to Cell opening at far calibration. | ______ |
 
 - [ ] Define and consistently use one physical distance reference: preferably launcher exit to Cell-opening center.
-- [ ] Measure success rate, left/right motor RPM, recovery time, and battery voltage for every shot.
+- [ ] Measure success rate, flywheel RPM, recovery time, and battery voltage for every shot.
 - [ ] Verify the feeder cannot send a second pollen during one pulse.
-- [ ] Verify a failed/slow flywheel motor prevents feed.
+- [ ] Verify a failed or slow flywheel motor prevents feed.
 - [ ] Verify release of the spin-up control finishes an active feed pulse before stopping.
 - [ ] Verify hood stowing during initialization is safe. If it would move during the Auto-to-TeleOp transition, wait until TeleOp begins before INIT.
 
@@ -267,7 +283,7 @@ Only the start-to-south-Hive and south-Hive-to-park paths are currently executed
 
 - [ ] Confirm red and blue Auto/TeleOp selections match the Driver Station alliance.
 - [ ] Driver approves field-centric translation, turn direction, deadband, normal speed, and precision speed.
-- [ ] Operator approves intake `A/X`, reverse `Y`, shooter spin-up right bumper, and one feed request per right-trigger press.
+- [ ] Operator approves intake `A/X`, reverse `Y`, matchloader toggle left bumper, shooter spin-up right bumper, and one feed request per right-trigger press.
 - [ ] Operator understands a trigger press made before shooter readiness is rejected; release and press again after READY.
 - [ ] Operator understands Hive telemetry is advisory in TeleOp. It does not aim automatically or prevent a manually aimed illegal/bad shot.
 - [ ] Confirm releasing right bumper after an active pulse completes that pulse and then stops the shooter.
@@ -278,7 +294,7 @@ Only the start-to-south-Hive and south-Hive-to-park paths are currently executed
 
 - [ ] Run **BIOBUZZ Pit Diagnostics** with the robot lifted and launcher clear. Hardware should power only while gamepad 2 `START` is held.
 - [ ] Confirm releasing the diagnostic arm control stops drive, intake, and shooter.
-- [ ] Watch both flywheel RPM values during spin-up and feed recovery.
+- [ ] Watch flywheel RPM during spin-up and feed recovery.
 - [ ] Confirm Limelight connection, active mode, pollen result, and Hive-opening estimate telemetry are understandable to the team.
 - [ ] Run the Java tests: `./gradlew :TeamCode:testDebugUnitTest`.
 - [ ] Build the APK: `./gradlew :TeamCode:assembleDebug`.
