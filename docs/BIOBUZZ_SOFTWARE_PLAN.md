@@ -23,12 +23,13 @@ every event.
 ## Robot architecture
 
 1. Pedro Pathing 3 mecanum drivetrain with Pinpoint localization.
-2. Single-roller intake and four-element inventory model. Auto tracks four
+2. Two-motor intake and four-element inventory model. Auto tracks four
    assumed preloads; sensorless TeleOp does not pretend its count is maintained.
-3. Two motors driving one shared flywheel, plus a feeder and adjustable hood.
-4. Limelight 3A neural pollen detection and Hive AprilTag targeting.
-5. A small coordinator for launcher readiness and timed feed completion.
-6. Competition TeleOp, preload autonomous, and diagnostics OpModes.
+3. One 6000-RPM motor driving the flywheel at 1:1, plus a feeder and adjustable hood.
+4. A TeleOp-only matchloader driven by a positional-mode goBILDA Speed Servo.
+5. Limelight 3A neural pollen detection and Hive AprilTag targeting.
+6. A small coordinator for launcher readiness and timed feed completion.
+7. Competition TeleOp, preload autonomous, and diagnostics OpModes.
 
 ## Hardware assumptions
 

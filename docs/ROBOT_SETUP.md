@@ -15,9 +15,10 @@ calibrated or field-tested on the physical robot. Treat every value marked
 | `pinpoint` | goBILDA Pinpoint odometry computer |
 | `imu` | Control Hub built-in IMU used for field-oriented TeleOp without Pinpoint |
 | `intake_left`, `intake_right` | two intake motors controlled together |
-| `flywheel_left`, `flywheel_right` | encoder-equipped launcher motors |
+| `flywheel_left` | single encoder-equipped 6000-RPM launcher motor (1:1 flywheel ratio) |
 | `feeder` | launcher feeder motor |
 | `hood` | launcher angle servo |
+| `matchloader` | goBILDA Speed Servo programmed in positional-feedback mode |
 | `limelight` | required launcher-aligned Limelight 3A running the Hive AprilTag pipeline |
 | `pollen_limelight` | optional second Limelight 3A running the pollen detector |
 
@@ -105,8 +106,10 @@ the installed camera firmware, mount, tag-size setting, or actual ballistic accu
 - `Y`: reverse intake
 - `B` or no intake button: stop intake
 - Hold right bumper: keep the shooter spinning (Hive vision already runs continuously)
-- Right trigger: request one feed pulse when the flywheels are ready; release
+- Right trigger: request one feed pulse when the flywheel is ready; release
   and press again if the previous request was made before spin-up completed
+- Left bumper: toggle the matchloader between stowed and deployed; press again while it is moving
+  to reverse it immediately
 
 TeleOp is manually aimed: Hive telemetry is advisory, not an automatic aim or
 firing interlock. The operator must select a legal opening and a calibrated shot
